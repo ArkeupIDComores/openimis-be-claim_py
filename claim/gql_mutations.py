@@ -275,7 +275,6 @@ class ClaimInputType(OpenIMISMutation.Input):
 
 
 
-
 class CreateClaimInputType(ClaimInputType):
     attachments = graphene.List(ClaimAttachmentInputType, required=False)
 
@@ -880,6 +879,7 @@ class SaveClaimReviewMutation(OpenIMISMutation):
                 if item['status'] == ClaimItem.STATUS_PASSED:
                     all_rejected = False
             services = data.pop('services') if 'services' in data else []
+            #approved = 0
             claimed = 0
             claim_service_elements = []
             for service in services:

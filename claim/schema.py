@@ -116,12 +116,14 @@ class Query(graphene.ObjectType):
         items = kwargs.get("items", None)
         services = kwargs.get("services", None)
 
+        show_restored = kwargs.get("show_restored", None)
+        if show_restored:
+            filters.append(Q(restore__isnull=False))
         if items:
             filters.append(Q(items__item__code__in=items))
 
         if services:
             filters.append(Q(services__service__code__in=services))
-
         attachment_status = kwargs.get("attachment_status", 0)
         if attachment_status == AttachmentStatusEnum.WITH.value:
             filters.append(Q(attachments__isnull=False))
