@@ -8,7 +8,8 @@ from location.schema import HealthFacilityGQLType
 from medical.schema import DiagnosisGQLType
 from claim_batch.schema import BatchRunGQLType
 from .apps import ClaimConfig
-from .models import ClaimDedRem, Claim, ClaimAdmin, Feedback, ClaimItem, ClaimService, ClaimAttachment
+from claim.models import (ClaimDedRem, Claim, ClaimAdmin, Feedback, ClaimItem, ClaimService, ClaimAttachment,
+                          ClaimAttachmentType, ClaimServiceService, ClaimServiceItem)
 from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
 
@@ -55,17 +56,14 @@ class ClaimGQLType(DjangoObjectType):
     attachments_count = graphene.Int()
     client_mutation_id = graphene.String()
     date_processed_to = graphene.Date()
-
+    restore_id = graphene.Int()
+    
     def resolve_insuree(self, info):
-        if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
-            raise PermissionDenied(_("unauthorized"))
         if "insuree_loader" in info.context.dataloaders and self.insuree_id:
             return info.context.dataloaders["insuree_loader"].load(self.insuree_id)
         return self.insuree
 
     def resolve_health_facility(self, info):
-        if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
-            raise PermissionDenied(_("unauthorized"))
         if (
             "health_facility_loader" in info.context.dataloaders
             and self.health_facility_id
@@ -74,14 +72,18 @@ class ClaimGQLType(DjangoObjectType):
                 self.health_facility_id
             )
         return self.health_facility
-
+    
+    def resolve_restore_id(self, info):
+        return self.restore_id
+        
+        
     class Meta:
         model = Claim
         interfaces = (graphene.relay.Node,)
         filter_fields = {
             "uuid": ["exact"],
             "code": ["exact", "istartswith", "icontains", "iexact"],
-            "status": ["exact", "gt"],
+            "status": ["exact"],
             "date_claimed": ["exact", "lt", "lte", "gt", "gte"],
             "date_from": ["exact", "lt", "lte", "gt", "gte"],
             "date_to": ["exact", "lt", "lte", "gt", "gte"],
@@ -101,31 +103,22 @@ class ClaimGQLType(DjangoObjectType):
         connection_class = ExtendedConnection
 
     def resolve_attachments_count(self, info):
-        if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
-            raise PermissionDenied(_("unauthorized"))
-        return self.attachments.filter(legacy_id__isnull=True).filter(validity_to__isnull=True).count()
+        return self.attachments.filter(legacy_id__isnull=True).count()
 
     def resolve_items(self, info):
-        if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
-            raise PermissionDenied(_("unauthorized"))
         return self.items.filter(legacy_id__isnull=True).filter(validity_to__isnull=True)
 
     def resolve_services(self, info):
-        if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
-            raise PermissionDenied(_("unauthorized"))
         return self.services.filter(legacy_id__isnull=True).filter(validity_to__isnull=True)
 
     def resolve_client_mutation_id(self, info):
-        if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
-            raise PermissionDenied(_("unauthorized"))
         claim_mutation = self.mutations.select_related(
             'mutation').filter(mutation__status=0).first()
         return claim_mutation.mutation.client_mutation_id if claim_mutation else None
 
     @classmethod
     def get_queryset(cls, queryset, info):
-        claim_ids = Claim.get_queryset(queryset, info).values('uuid').all()
-        return Claim.objects.filter(uuid__in=claim_ids)
+        return Claim.get_queryset(queryset, info).all()
 
 
 class ClaimAttachmentGQLType(DjangoObjectType):
@@ -141,6 +134,7 @@ class ClaimAttachmentGQLType(DjangoObjectType):
             "date": ["exact", "lt", "lte", "gt", "gte"],
             "filename": ["exact", "icontains"],
             "mime": ["exact", "icontains"],
+            "general_type": ["exact", "icontains"],
             "url": ["exact", "icontains"],
             **prefix_filterset("claim__", ClaimGQLType._meta.filter_fields),
         }
@@ -150,6 +144,17 @@ class ClaimAttachmentGQLType(DjangoObjectType):
     def get_queryset(cls, queryset, info):
         queryset = queryset.filter(*filter_validity())
         return queryset
+
+
+class ClaimAttachmentTypeGQLType(DjangoObjectType):
+    class Meta:
+        model = ClaimAttachmentType
+        interfaces = (graphene.relay.Node,)
+        filter_fields = {
+            "id": ["exact"],
+            "claim_general_type": ["exact"]
+        }
+        connection_class = ExtendedConnection
 
 
 class FeedbackGQLType(DjangoObjectType):
@@ -173,3 +178,19 @@ class ClaimServiceGQLType(DjangoObjectType):
 
     class Meta:
         model = ClaimService
+
+class ClaimServiceServiceGQLType(DjangoObjectType):
+    """
+    Contains the Claim services within a specific Claim
+    """
+
+    class Meta:
+        model = ClaimServiceService
+
+class ClaimServiceItemGQLType(DjangoObjectType):
+    """
+    Contains the Claim services within a specific Claim
+    """
+
+    class Meta:
+        model = ClaimServiceItem
