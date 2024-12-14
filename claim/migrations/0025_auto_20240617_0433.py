@@ -10,8 +10,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddIndex(
-            model_name='claim',
-            index=models.Index(fields=['code', 'status'], name='IX_tblClaim_code_insuree_uuid_status'),
-        )
+        #migrations.AddIndex(
+        #    model_name='claim',
+        #    index=models.Index(fields=['code', 'status'], name='IX_tblClaim_code_insuree_uuid_status'),
+        #)
     ]
