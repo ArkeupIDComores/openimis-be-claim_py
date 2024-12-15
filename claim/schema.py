@@ -49,10 +49,15 @@ class Query(graphene.ObjectType):
     claim_admins = DjangoFilterConnectionField(
         ClaimAdminGQLType,
         search=graphene.String(),
-        user_health_facility=graphene.String()
+        region_uuid=graphene.String(),
+        district_uuid=graphene.String()
     )
     claim_officers = DjangoFilterConnectionField(
         OfficerGQLType, search=graphene.String()
+    )
+
+    insuree_name_by_chfid = graphene.String(
+        chfId=graphene.String(required=True)
     )
 
     validate_claim_code = graphene.Field(
@@ -77,6 +82,21 @@ class Query(graphene.ObjectType):
     claim_attachment_type = DjangoFilterConnectionField(
         ClaimAttachmentTypeGQLType
     )
+
+    def resolve_insuree_name_by_chfid(self, info, **kwargs):
+        if not info.context.user.has_perms(ClaimConfig.gql_mutation_create_claims_perms)\
+                and not info.context.user.has_perms(ClaimConfig.gql_mutation_update_claims_perms):
+            raise PermissionDenied(_("unauthorized"))
+        chf_id = kwargs.get('chfId')
+        insuree = Insuree.objects\
+            .filter(validity_to__isnull=True, chf_id=chf_id)\
+            .values('last_name', 'other_names')\
+            .first()
+        if insuree:
+            insuree_name = f"{insuree['other_names']} {insuree['last_name']}"
+        else:
+            insuree_name = ""
+        return insuree_name
 
     def resolve_validate_claim_code(self, info, **kwargs):
         if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
@@ -124,6 +144,7 @@ class Query(graphene.ObjectType):
 
         if services:
             filters.append(Q(services__service__code__in=services))
+
         attachment_status = kwargs.get("attachment_status", 0)
         if attachment_status == AttachmentStatusEnum.WITH.value:
             filters.append(Q(attachments__isnull=False))
@@ -210,10 +231,12 @@ class Query(graphene.ObjectType):
         filters = [*filter_validity(**kwargs)]
         if user_health_facility:
             filters += [Q(health_facility__in=user_health_facility)]
+
         if search:
             filters += [Q(code__icontains=search) |
                         Q(last_name__icontains=search) |
                         Q(other_names__icontains=search)]
+
         return ClaimAdmin.objects.filter(*filters)
 
     def resolve_claim_officers(self, info, search=None, **kwargs):
