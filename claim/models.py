@@ -217,6 +217,12 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
     admin = models.ForeignKey(
         ClaimAdmin, models.DO_NOTHING, db_column='ClaimAdminId',
         blank=True, null=True)
+    refer_from = models.ForeignKey(
+        location_models.HealthFacility, models.DO_NOTHING, related_name='referFromHF',
+        db_column='ReferFrom', blank=True, null=True)
+    refer_to = models.ForeignKey(
+        location_models.HealthFacility, models.DO_NOTHING, related_name='referToHF',
+        db_column='ReferTo', blank=True, null=True)
     icd = models.ForeignKey(
         medical_models.Diagnosis, models.DO_NOTHING, db_column='ICDID',
         related_name="claim_icds")
@@ -377,7 +383,7 @@ class ClaimAttachmentsCount(models.Model):
     value = models.IntegerField(db_column='attachments_count')
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'claim_ClaimAttachmentsCountView'
 
 
@@ -478,7 +484,7 @@ class ClaimItem(core_models.VersionedModel, ClaimDetail, core_models.ExtendableM
     objects = ClaimDetailManager()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'tblClaimItems'
 
 
@@ -580,7 +586,7 @@ class ClaimService(core_models.VersionedModel, ClaimDetail, core_models.Extendab
     objects = ClaimDetailManager()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'tblClaimServices'
 
 class ClaimServiceItem(models.Model):
@@ -650,5 +656,5 @@ class ClaimDedRem(core_models.VersionedModel):
     audit_user_id = models.IntegerField(db_column='AuditUserID')
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'tblClaimDedRem'
