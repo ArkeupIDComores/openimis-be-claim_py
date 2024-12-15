@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('location', '0015_set_managed_to_true'),
-        ('claim', '0018_auto_20230918_2140'),
+        ('claim', '0031_merge_20240318_1324'),
     ]
 
     operations = []
