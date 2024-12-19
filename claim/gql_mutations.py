@@ -630,6 +630,7 @@ class SubmitClaimsMutation(OpenIMISMutation, ClaimSubmissionStatsMixin):
     def async_mutate(cls, user, **data):
         if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
             raise PermissionDenied(_("unauthorized"))
+        logger.debug("SubmitClaimsMutation: Asyn Mutate Start %s", "")
         errors = []
         uuids = data.get("uuids", [])
         client_mutation_id = data.get("client_mutation_id", None)

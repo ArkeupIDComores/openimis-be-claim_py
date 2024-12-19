@@ -959,6 +959,9 @@ def process_dedrem(claim, audit_user_id=-1, is_process=False):
         ).count()
 
         # TODO see declaration of policy_id above
+        logger.warning(f"[Debug] Policy Id {policy_product['policy_id']}.")
+        logger.warning(f"[Debug] Product Id {policy_product['product_id']}.")
+        logger.warning(f"[Debug] Target Date {target_date}.")
         policy = Policy.objects.get(id=policy_product["policy_id"])
         ceiling_interpretation = product.ceiling_interpretation
 
@@ -1407,7 +1410,7 @@ def process_dedrem(claim, audit_user_id=-1, is_process=False):
     else:
         claim_ded_rem_to_create["ded_op"] = deducted
         claim_ded_rem_to_create["rem_op"] = remunerated
-
+    logger.debug(f"[Debug] Claim DedRem Creation")
     ClaimDedRem.objects.create(**claim_ded_rem_to_create)
 
     if is_process:
