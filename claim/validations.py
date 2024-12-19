@@ -1386,6 +1386,7 @@ def process_dedrem(claim, audit_user_id=-1, is_process=False):
 
     # amount is 'locked' from the submit
     # ... so re-creating the ClaimDedRem according to adjusted/valuated price
+    ### If poliicyID is null 
     ClaimDedRem.objects.filter(claim=claim).delete()
 
     from core import datetime
