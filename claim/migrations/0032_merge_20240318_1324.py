@@ -15,9 +15,9 @@ class Migration(migrations.Migration):
             name='claimdedrem',
             options={'managed': True},
         ),
-        migrations.AlterField(
-            model_name='claimdedrem',
-            name='PolicyID',
-            field=models.IntegerField(null=True, blank=True),
-        ),
+        #migrations.AlterField(
+        #    model_name='claimdedrem',
+        #    name='PolicyID',
+        #    field=models.IntegerField(null=True, blank=True),
+        #),
     ]
