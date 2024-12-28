@@ -11,9 +11,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='claim',
-            name='restore',
-            field=models.ForeignKey(blank=True, db_column='RestoredClaim', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='claim.claim'),
-        ),
+        # migrations.AddField(
+        #     model_name='claim',
+        #     name='restore',
+        #     field=models.ForeignKey(blank=True, db_column='RestoredClaim', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='claim.claim'),
+        # ),
     ]
