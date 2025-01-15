@@ -7,7 +7,7 @@ from insuree.schema import InsureeGQLType
 from location.schema import HealthFacilityGQLType
 from medical.schema import DiagnosisGQLType
 from claim_batch.schema import BatchRunGQLType
-from program.schema import ProgramGQLType 
+from program.schema import ProgramGQLType
 from .apps import ClaimConfig
 from claim.models import (ClaimDedRem, Claim, ClaimAdmin, Feedback, ClaimItem, ClaimService, ClaimAttachment,
                           ClaimAttachmentType, ClaimServiceService, ClaimServiceItem)
