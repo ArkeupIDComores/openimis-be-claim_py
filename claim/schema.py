@@ -227,8 +227,8 @@ class Query(graphene.ObjectType):
                 if q:
                     hf_filters += [q]
             except Exception as e:
-                logger.debug("Error on user: %s ", e)
-                logger.debug("Current user: %s ", info.context.user)
+                logger.exception("Error on user: %s ", e)
+                logger.exception("Current user: %s ", info.context.user)
 
         user_health_facility = HealthFacility.objects.filter(*hf_filters)
 
