@@ -222,9 +222,13 @@ class Query(graphene.ObjectType):
         elif region_uuid is not None:
             hf_filters += [Q(location__parent__uuid=region_uuid)]
         if settings.ROW_SECURITY:
-            q = LocationManager().build_user_location_filter_query( info.context.user._u, prefix='location', loc_types=['D'])
-            if q:
-                hf_filters += [q]
+            try:
+                q = LocationManager().build_user_location_filter_query( info.context.user._u, prefix='location', loc_types=['D'])
+                if q:
+                    hf_filters += [q]
+            except Exception as e:
+                logger.debug("Error on user: %s ", e)
+                logger.debug("Current user: %s ", info.context.user)
 
         user_health_facility = HealthFacility.objects.filter(*hf_filters)
 
