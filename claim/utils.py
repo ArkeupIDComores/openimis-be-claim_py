@@ -12,14 +12,10 @@ def process_child_relation(user, data_children, claim_id, children, create_hook)
     if __check_if_maximum_amount_overshoot(data_children, children):
         raise ValidationError(_("mutation.claim_item_service_maximum_amount_overshoot"))
     for data_elt in data_children:
-        if ClaimConfig.native_code_for_services == False:
-            if create_hook == service_create_hook:
-                claimed += calcul_amount_service(data_elt)
-            else:
-                claimed += data_elt['qty_provided'] * data_elt['price_asked']
+        if create_hook == service_create_hook:
+            claimed += calcul_amount_service(data_elt)
         else:
             claimed += data_elt['qty_provided'] * data_elt['price_asked']
-
         elt_id = data_elt.pop('id') if 'id' in data_elt else None
         if elt_id:
             # elt has been historized along with claim historization
@@ -47,8 +43,13 @@ def process_child_relation(user, data_children, claim_id, children, create_hook)
 
 
 def calcul_amount_service(elt):
+    if 'service_id' in elt:
+        service = Service.objects.get(id=elt['service_id'], validity_to__isnull=True)
+        if service.manualPrice:
+            totalClaimed = service.price
+            return totalClaimed
     totalClaimed = elt['price_asked'] * elt['qty_provided']
-    if len(elt['service_item_set']) != 0 and len(elt['service_service_set']) != 0:
+    if 'service_item_set' in elt and 'service_service_set' in elt and len(elt['service_item_set']) != 0 and len(elt['service_service_set']) != 0:
         totalClaimed = 0
         for service_item_set in elt['service_item_set']:
             if "qty_asked" in service_item_set:
