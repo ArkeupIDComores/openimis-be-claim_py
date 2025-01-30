@@ -1085,7 +1085,7 @@ class ImportClaimsMutation(OpenIMISMutation):
 
             file_url = data.get('file_url')
             
-            errors = import_claims(file_url)
+            errors = import_claims(file_url, user)
             if errors:
                 raise ValidationError(f"Import failed: {errors}")
 

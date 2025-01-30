@@ -739,13 +739,13 @@ def update_claims_dedrems(uuids, user):
             "claim.validation.id_does_not_exist") % {'id': ','.join(remaining_uuid)})
     return errors
 
-def import_claims(file_url):
+def import_claims(file_url, user):
     df_claims = pd.read_excel(file_url, sheet_name='Claims')
 
     errors = check_claims_data(df_claims)
     if errors:
         raise ValidationError(f"Erreurs détectées : {', '.join(errors)} !")
-    print("Importation réussie !")
+    insert_claims_data(df_claims, user)
 
 def check_claims_data(df_claims):
     errors = []
@@ -857,15 +857,85 @@ def check_claims_data(df_claims):
 
         try:
             visit_type = row['TypeVisite']
-            if visit_type == "Urgence":
-                visit_type = "E"
-            elif visit_type == "Autres":
-                visit_type = "O"
-            elif visit_type == "Renvoie":
-                visit_type = "R"
-            else:
+            if visit_type not in("Urgence", "Autres", "Renvoie"):
                 errors.append(f"Type de visite invalide : {visit_type} à la ligne {index + 1}")
         except KeyError:
             errors.append(f"Clé 'TypeVisite' manquante dans les données à la ligne {index + 1}")
+
+    return errors
+
+def insert_claims_data(df_claims, user):
+    with transaction.atomic():
+        for index, row in df_claims.iterrows():
+            claim = Claim.objects.filter(code=row['NumeroPrestation']).first()
+
+            if not claim:
+                admin = ClaimAdmin.objects.filter(id=row['AdminID'], validity_to__isnull=True).first()
+                if not admin:
+                    raise ValidationError(f"Administrateur non trouvé pour l'ID : {row['AdminID']} à la ligne {index + 1}")
+
+                insuree = Insuree.objects.filter(chf_id=row['NumeroAssure'], validity_to__isnull=True).first()
+                if not insuree:
+                    raise ValidationError(f"Assuré non trouvé pour le numéro : {row['NumeroAssure']} à la ligne {index + 1}")
+
+                program = Program.objects.filter(idProgram=row['ProgramID']).first()
+                if not program:
+                    raise ValidationError(f"Programme non trouvé pour l'ID : {row['ProgramID']} à la ligne {index + 1}")
+
+                fosa = HealthFacility.objects.filter(id=row['FosaID'], validity_to__isnull=True).first()
+                if not fosa:
+                    raise ValidationError(f"FOSA non trouvé pour l'ID : {row['FosaID']} à la ligne {index + 1}")
+
+                icd = Diagnosis.objects.filter(id=row['DiagnosticID'], validity_to__isnull=True).first()
+                if not icd:
+                    raise ValidationError(f"Diagnostic principal non trouvé pour l'ID : {row['DiagnosticID']} à la ligne {index + 1}")
+
+                service = Service.objects.filter(id=row['ServicesID'], validity_to__isnull=True).first()
+                if not service:
+                    raise ValidationError(f"Service non trouvé pour l'ID : {row['ServicesID']} à la ligne {index + 1}")
+
+                errors = []
+                visit_type = row['TypeVisite']
+                if visit_type == "Urgence":
+                    visit_type = "E"
+                elif visit_type == "Autres":
+                    visit_type = "O"
+                elif visit_type == "Renvoie":
+                    visit_type = "R"
+                else:
+                    errors.append(f"Type de visite invalide : {visit_type} à la ligne {index + 1}")
+                    raise ValidationError(f"Erreur trouvée lors de l'insertion des données à la ligne {index + 1}: {'; '.join(errors)}")
+
+                claim = Claim.objects.create(
+                    audit_user_id=user.id_for_audit,
+                    code=row['NumeroPrestation'],
+                    insuree=insuree,
+                    admin=admin,
+                    health_facility=fosa,
+                    program=program,
+                    icd=icd,
+                    visit_type=visit_type,
+                    date_from=row['DateAdmission'],
+                    date_to=row['DateSortie'],
+                    date_claimed=row['DatePrestation'],
+                    explanation=row['Explication'],
+                    status=Claim.STATUS_ENTERED,
+                    json_ext="{}",
+                    feedback_status=1,
+                    review_status=1
+                )
+                claim.save()
+
+            service = Service.objects.filter(id=row['ServicesID'], validity_to__isnull=True).first()
+            if service:
+                service_data = {
+                    'qty_provided': 1,
+                    'price_asked': service.price,
+                    'service_id': service.id,
+                    'status': 1
+                }
+                claim_create_items_and_services(claim, {'services': [service_data]}, user)
+
+            claim.save()
 
     return errors
