@@ -1136,7 +1136,7 @@ class ValidationTest(TestCase):
     
     def test_submit_claim_with_different_packatypes(self):
         from claim.apps import ClaimConfig
-        ClaimConfig.verify_quantities=False
+        ClaimConfig.verify_quantities=True
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("VISIT", custom_props={})
@@ -1260,4 +1260,4 @@ class ValidationTest(TestCase):
         service.delete()
         item.delete()
         product.delete()
-        ClaimConfig.verify_quantities=True
+        ClaimConfig.verify_quantities=False
