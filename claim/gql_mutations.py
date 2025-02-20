@@ -892,7 +892,7 @@ class SaveClaimReviewMutation(OpenIMISMutation):
                 claim.services.filter(id=service_id).update(**service)
                 if ClaimConfig.native_code_for_services == False:
                     for claim_service_service in service_service_set:
-                        claim_service_code = claim_service_service.pop('subServiceCode')
+                        claim_service_code = claim_service_service.pop('sub_service_code')
                         claim_service = claim.services.filter(id=service_id).first()
                         if claim_service:
                             service_element = Service.objects.filter(*filter_validity(), code=claim_service_code).first()
@@ -908,7 +908,7 @@ class SaveClaimReviewMutation(OpenIMISMutation):
                                     claim_service_to_update.update(**claim_service_service)
                             claim_service_elements.append(claim_service)
                     for claim_service_item in service_linked:
-                        claim_item_code = claim_service_item.pop('subItemCode')
+                        claim_item_code = claim_service_item.pop('sub_item_code')
                         claim_service = claim.services.filter(id=service_id).first()
                         if claim_service:
                             item_element = Item.objects.filter(*filter_validity(), code=claim_item_code).first()
