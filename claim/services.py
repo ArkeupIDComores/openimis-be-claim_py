@@ -472,6 +472,8 @@ def claim_create_items_and_services(claim, data, user):
     claimed = 0
     claimed += process_items_relations(user, claim, items)
     claimed += process_services_relations(user, claim, services)
+    if claimed == 0:
+        claimed = 0.00
     claim.claimed = claimed
     claim.save()
 
