@@ -279,11 +279,19 @@ def validate_claimdetail_limitation_fail(claim, claimdetail):
     if claimdetail.itemsvc.patient_category == 0:
         return []
     errors = []
+    logger.debug(f"voici la date_to du claim : {claim.date_to} et voici sa date_from du claim : {claim.date_from}")
     target_date = __get_claim_target_date(claim)
+    logger.debug(f"voici la date cible : {target_date}")
+    logger.debug(f"voici la date de naissance de l'assuré : {claim.insuree.dob}")
+    logger.debug(f"C'est à partir de la date cible que l'on determine si l'assuré est adulte. Cette date de reference est soit la valeur du date_to du claim si elle existe soit celle du date_from sinon!!!")
     patient_category_mask = utils.patient_category_mask(
         claim.insuree, target_date)
     
+    logger.debug(f"voici le masque de categorie calculé avant l'exception : {patient_category_mask}")
+    logger.debug(f"Et voici le masque de categorie qui est dans les details du claim avant l'exception : {claimdetail.itemsvc.patient_category}")
+    
     if claimdetail.itemsvc.patient_category & patient_category_mask != patient_category_mask:
+        logger.debug(f"voici le masque de categorie dans l'exception qui est different de celui qui est dans les details du claim:{patient_category_mask}")
         claimdetail.rejection_reason = REJECTION_REASON_CATEGORY_LIMITATION
         errors += [{'code': REJECTION_REASON_CATEGORY_LIMITATION,
                     'message': _("claim.validation.claimdetail_limitation_validity") % {
