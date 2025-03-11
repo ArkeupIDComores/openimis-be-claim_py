@@ -963,8 +963,8 @@ def process_dedrem(claim, audit_user_id=-1, is_process=False):
     if items_query.count() == 0 and services_query.count() == 0:
         logger.warning(f"claim {claim.uuid} did not have any item or service to valuate.")
     for policy_product in items_query.union(services_query, all=True):
-        product = Product.objects.get(*filter_validity(validity=target_date), 
-                Q(Q(id=policy_product["product_id"])|Q(legacy_id=policy_product["product_id"])))
+        product = Product.objects.filter(*filter_validity(validity=target_date),
+            Q(Q(id=policy_product["product_id"])|Q(legacy_id=policy_product["product_id"]))).order_by('-date_from').first()
         policy_members = InsureePolicy.objects.filter(
             policy_id=policy_product["policy_id"],
             effective_date__isnull=False,
