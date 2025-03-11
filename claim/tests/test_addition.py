@@ -5,5 +5,5 @@ class AdditionTest(TestCase):
     def setUp(self) -> None:
         super(AdditionTest, self).setUp()
 
-    def simple_test_addition(self):
+    def test_simple_addition(self):
         self.assertEqual(1 + 1, 2)
