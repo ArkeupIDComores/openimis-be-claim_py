@@ -491,11 +491,11 @@ def check_service_item_max_provision(adult, product_service_item, service_or_ite
             else:
                 claim_service_item.rejection_reason = REJECTION_REASON_QTY_OVER_LIMIT
                 errors += [{'code': REJECTION_REASON_QTY_OVER_LIMIT,
-                            'message': _("claim.validation.product_family.max_nb_allowed") % {
+                            'message': _("claim.validation.product_family.max_nb_allowed").format({
                                 'code': claim_service_item.claim.code,
                                 'element': str(service_or_item),
                                 'provided': total_qty_provided,
-                                'max': limit_no},
+                                'max': limit_no}),
                             'detail': claim_service_item.claim.uuid}]
 
     return errors
