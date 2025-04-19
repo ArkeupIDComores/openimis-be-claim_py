@@ -19,5 +19,10 @@ class Migration(migrations.Migration):
             model_name='claim',
             name='patient_condition',
             field=models.CharField(blank=True, max_length=2, null=True),
-        )
+        ),
+        migrations.AddField(
+            model_name='claim',
+            name='referral_code',
+            field=models.CharField(blank=True, max_length=50, null=True),
+        ),
     ]
