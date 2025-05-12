@@ -34,7 +34,8 @@ class Query(graphene.ObjectType):
         json_ext=graphene.JSONString(),
         attachment_status=graphene.Int(required=False),
         care_type=graphene.String(required=False),
-        show_restored=graphene.Boolean(required=False)
+        show_restored=graphene.Boolean(required=False),
+        rejection_code=graphene.Int(required=False)
     )
 
     claim = graphene.Field(
@@ -188,6 +189,9 @@ class Query(graphene.ObjectType):
         #query = query.filter(
         #            LocationManager().build_user_location_filter_query( info.context.user._u, prefix='health_facility__location') 
         #        )
+        rejection_code = kwargs.get("rejection_code", None)
+        if rejection_code:
+            filters.append(Q(services__rejection_reason=rejection_code))
         code_is_not = kwargs.get("code_is_not", None)
         
         if len(filters):
