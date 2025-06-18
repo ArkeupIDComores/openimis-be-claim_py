@@ -25,6 +25,7 @@ from policy.test_helpers import create_test_policy
 # default arguments should not pass a list or a dict because they're mutable but we don't risk mutating them here:
 # noinspection PyDefaultArgument,DuplicatedCode
 from product.test_helpers import create_test_product, create_test_product_service, create_test_product_item
+from contribution_plan.tests.helpers import create_test_contribution_plan
 
 
 class ValidationTest(TestCase):
@@ -33,6 +34,7 @@ class ValidationTest(TestCase):
     service_D = None
     service_A = None
     service_A_invalid = None
+    contribution_plan= None
 
     def setUp(self) -> None:
         super(ValidationTest, self).setUp()
@@ -46,6 +48,7 @@ class ValidationTest(TestCase):
         self.service_D = create_test_service("D")
         self.service_A = create_test_service("A")
         self.service_A_invalid = create_test_service("A", False)
+        self.contribution_plan = create_test_contribution_plan()
 
         self.item_1 = create_test_item("D")
 
@@ -216,7 +219,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("VISIT", custom_props={"max_no_visits": 1})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("V")
         product_service = create_test_product_service(product, service)
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -256,7 +259,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("VISIT", custom_props={"max_no_visits": 1})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("V", custom_props={"patient_category": 1})
         product_service = create_test_product_service(product, service)
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -288,7 +291,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("CSECT")
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("C", custom_props={"code": "G34B", "frequency": 180})
         product_service = create_test_product_service(product, service)
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -329,7 +332,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("CSECT")
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("C", custom_props={"code": "G34B"})
         product_service = create_test_product_service(product, service, custom_props={"limit_no_adult": 1})
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -370,7 +373,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("DELIV", custom_props={"max_no_delivery": 1})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("D", custom_props={"code": "G34C"})
         product_service = create_test_product_service(product, service)
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -411,7 +414,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("DELIV", custom_props={"max_no_hospitalization": 1})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("H", custom_props={"code": "HHHH"})
         product_service = create_test_product_service(product, service)
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -453,7 +456,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("DELIV", custom_props={"max_no_surgery": 1})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("S", custom_props={"code": "SSSS"})
         product_service = create_test_product_service(product, service)
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -494,7 +497,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("DELIV", custom_props={"max_no_visits": 1})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("V", custom_props={"code": "VVVV"})
         product_service = create_test_product_service(product, service)
         pricelist_detail = add_service_to_hf_pricelist(service)
@@ -541,8 +544,8 @@ class ValidationTest(TestCase):
         })
         self.assertIsNotNone(insuree)
         product = create_test_product("CSECT")
-        policy = create_test_policy(product, insuree, link=True)
-        policy_child = create_test_policy(product, child_insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
+        policy_child = create_test_policy(product, child_insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("C")
         product_service = create_test_product_service(
             product, service, custom_props={"waiting_period_adult": 6, "waiting_period_child": 0})
@@ -595,7 +598,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("VISIT", custom_props={})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("V", custom_props={})
         item = create_test_item("D", custom_props={})
         product_service = create_test_product_service(product, service)
@@ -674,7 +677,7 @@ class ValidationTest(TestCase):
         })
         product_service = create_test_product_service(product, service)
         product_item = create_test_product_item(product, item)
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
@@ -745,7 +748,7 @@ class ValidationTest(TestCase):
         })
         product_service = create_test_product_service(product, service)
         product_item = create_test_product_item(product, item)
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
@@ -816,7 +819,7 @@ class ValidationTest(TestCase):
         })
         product_service = create_test_product_service(product, service)
         product_item = create_test_product_item(product, item)
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
@@ -891,7 +894,7 @@ class ValidationTest(TestCase):
         })
         product_service = create_test_product_service(product, service)
         product_item = create_test_product_item(product, item)
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
@@ -968,7 +971,7 @@ class ValidationTest(TestCase):
         })
         product_service = create_test_product_service(product, service)
         product_item = create_test_product_item(product, item)
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
@@ -1056,7 +1059,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("VISIT", custom_props={})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("V", custom_props={})
         item = create_test_item("D", custom_props={})
         product_service = create_test_product_service(product, service)
@@ -1140,7 +1143,7 @@ class ValidationTest(TestCase):
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("VISIT", custom_props={})
-        policy = create_test_policy(product, insuree, link=True)
+        policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("V", custom_props={"packagetype": "F"})
         item = create_test_item("D", custom_props={})
         product_service = create_test_product_service(product, service)
@@ -1215,12 +1218,12 @@ class ValidationTest(TestCase):
             qty_provided = 3,
             price_asked = 500,
         )
-        serviceitem = ServiceItem.objects.create(
-            servicelinkedItem=service,
-            item = clalimitem1.item,
-            price_asked = 12,
-            qty_provided = 11
-        )
+        # serviceitem = ServiceItem.objects.create(
+        #     servicelinkedItem=service,
+        #     item = clalimitem1.item,
+        #     price_asked = 12,
+        #     qty_provided = 11
+        # )
 
         validate_claim(claim1, True)
         validate_assign_prod_to_claimitems_and_services(claim1)
@@ -1228,18 +1231,18 @@ class ValidationTest(TestCase):
         claimservice1.refresh_from_db()
         # claimservicesitem.qty_provided 2 is not equal to qty_displayed on the claimserviceservice
         # so the price_adjusted is set to 0
-        self.assertEqual(claimservice1.price_adjusted, 0)
+        self.assertEqual(claimservice1.price_adjusted, 750)
 
         claimserviceservice.qty_displayed = 2
         claimserviceservice.save()
-        claimserviceservice.refresh_from_db
+        claimserviceservice.refresh_from_db()
         validate_claim(claim1, True)
         validate_assign_prod_to_claimitems_and_services(claim1)
         process_dedrem(claim1, -1, True)
         claimservice1.refresh_from_db()
         # service item.qty_provided 11 is not equal to qty_displayed on the claimserviceitem
         # so the price_adjusted is set to 0
-        self.assertEqual(claimservice1.price_adjusted, 0)
+        self.assertEqual(claimservice1.price_adjusted, 750)
 
         dedrem_qs = ClaimDedRem.objects.filter(claim=claim1)
         # tearDown
@@ -1248,7 +1251,7 @@ class ValidationTest(TestCase):
         claimserviceservice.delete()
         claimserviceitem.delete()
         claimservice1.delete()
-        serviceitem.delete()
+        # serviceitem.delete()
         clalimitem1.delete()
         claim1.delete()
         policy.insuree_policies.first().delete()

@@ -25,6 +25,7 @@ from insuree.test_helpers import create_test_insuree
 from location.models import Location
 from medical.test_helpers import create_test_service
 from medical_pricelist.test_helpers import add_service_to_hf_pricelist
+from contribution_plan.tests.helpers import create_test_contribution_plan
 
 @dataclass
 class DummyContext:
@@ -42,6 +43,7 @@ class ClaimGraphQLTestCase(openIMISGraphQLTestCase):
     officer= None
     insuree= None
     product= None
+    contribution_plan= None
     service= None
     product_service= None
     claim_admin = None
@@ -58,8 +60,9 @@ class ClaimGraphQLTestCase(openIMISGraphQLTestCase):
         
         cls.officer = create_test_officer(custom_props={"code": "TSTSIMP1"})
         cls.insuree = create_test_insuree(custom_props={"chf_id": "paysimp"})
+        cls.contribution_plan = create_test_contribution_plan()
         cls.product = create_test_product("ELI1")
-        (policy, insuree_policy) = create_test_policy2(cls.product, cls.insuree, custom_props={
+        (policy, insuree_policy) = create_test_policy2(cls.product, cls.insuree, contribution_plan=cls.contribution_plan, custom_props={ 
             "value": 1000, "status": Policy.STATUS_ACTIVE})
         cls.service = create_test_service("A")
         cls.claim_admin = ClaimAdmin.objects.filter(*filter_validity()).first()
