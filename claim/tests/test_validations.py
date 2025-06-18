@@ -12,7 +12,7 @@ from django.test import TestCase
 from insuree.models import Family, Insuree
 from insuree.test_helpers import create_test_insuree
 from location.models import HealthFacility
-from medical_pricelist.test_helpers import add_service_to_hf_pricelist, add_item_to_hf_pricelist
+from medical_pricelist.test_helpers import add_service_to_hf_pricelist, add_item_to_hf_pricelist, create_test_service_pricelist
 from medical.models import ServiceItem, ServiceService
 from product.models import ProductItemOrService
 
@@ -28,6 +28,7 @@ from product.test_helpers import create_test_product, create_test_product_servic
 from contribution_plan.tests.helpers import create_test_contribution_plan
 from datetime import date, timedelta
 
+from location.test_helpers import create_test_health_facility, create_test_location
 
 class ValidationTest(TestCase):
     service_H = None
@@ -226,13 +227,13 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a visit should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
         self.assertEquals(len(errors), 0, "The first visit should be accepted")
 
         # a second visit should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service2 = create_test_claimservice(claim2, "V")
         errors = validate_claim(claim2, True)
         # TODO Temporarily disabled
@@ -263,15 +264,20 @@ class ValidationTest(TestCase):
         policy = create_test_policy(product, insuree, contribution_plan=self.contribution_plan, link=True)
         service = create_test_service("V", custom_props={"patient_category": 1})
         product_service = create_test_product_service(product, service)
-        pricelist_detail = add_service_to_hf_pricelist(service)
+        location = create_test_location("D")
+        hf = create_test_health_facility(code="HF001", location_id=location.id)
+        service_pricelist = create_test_service_pricelist(location_id=location.id)
+        hf.services_pricelist = service_pricelist
+        hf.save()
+        pricelist_detail = add_service_to_hf_pricelist(service, hf_id=hf.id)
 
         # The insuree has a patient_category of 6, not matching the service category
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "health_facility_id": hf.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
 
         # Then
-        claim1.refresh_from_db()
+        claim1.refresh_from_db() 
         self.assertEquals(len(errors), 2)
         self.assertEquals(errors[0]['code'], 1)  # claimed rejected because all services are rejected
         self.assertEquals(claim1.services.first().rejection_reason, 4)  # reason is wrong insuree mask
@@ -288,9 +294,7 @@ class ValidationTest(TestCase):
 
     def test_frequency(self):
         # When the insuree already reaches his limit of visits
-        # Given
-        today = date.today()
-        date1 = today - timedelta(days=30)
+        # Given 
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("CSECT")
@@ -300,7 +304,7 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a visit should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id, "date_from": date1, "date_to": date1, "date_claimed": date1})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
         mark_test_claim_as_processed(claim1)
@@ -308,7 +312,7 @@ class ValidationTest(TestCase):
         self.assertEquals(len(errors), 0, "The first visit should be accepted")
 
         # a second visit should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id, "date_from": today, "date_to": today, "date_claimed": today})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertGreater(len(errors), 0, "The second service should be refused as it is withing 180 days")
@@ -341,7 +345,7 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a visit should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id, "qty_provided": 1})
         errors = validate_claim(claim1, True)
         mark_test_claim_as_processed(claim1)
@@ -349,7 +353,7 @@ class ValidationTest(TestCase):
         self.assertEquals(len(errors), 0, "The first visit should be accepted")
 
         # a second visit should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertGreater(len(errors), 0, "The second service should be refused")
@@ -382,7 +386,7 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a delivery should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
         mark_test_claim_as_processed(claim1)
@@ -390,7 +394,7 @@ class ValidationTest(TestCase):
         self.assertEquals(len(errors), 0, "The first visit should be accepted")
 
         # a second delivery should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertGreater(len(errors), 0, "The second service should fail because there is already one delivery")
@@ -423,7 +427,7 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a delivery should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
         mark_test_claim_as_processed(claim1)
@@ -431,7 +435,7 @@ class ValidationTest(TestCase):
         self.assertEquals(len(errors), 0, "The first hospitalization should be accepted")
 
         # a second delivery should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertGreater(len(errors), 0,
@@ -465,7 +469,7 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a delivery should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
         mark_test_claim_as_processed(claim1)
@@ -473,7 +477,7 @@ class ValidationTest(TestCase):
         self.assertEquals(len(errors), 0, "The first surgery should be accepted")
 
         # a second delivery should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertGreater(len(errors), 0, "The second service should fail because there is already one surgery")
@@ -506,7 +510,7 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a delivery should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
         mark_test_claim_as_processed(claim1)
@@ -514,7 +518,7 @@ class ValidationTest(TestCase):
         self.assertEquals(len(errors), 0, "The first visit should be accepted")
 
         # a second delivery should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertGreater(len(errors), 0, "The second service should fail because there is already one visit")
@@ -552,10 +556,15 @@ class ValidationTest(TestCase):
         service = create_test_service("C")
         product_service = create_test_product_service(
             product, service, custom_props={"waiting_period_adult": 6, "waiting_period_child": 0})
-        pricelist_detail = add_service_to_hf_pricelist(service)
+        location = create_test_location("D")
+        hf = create_test_health_facility(code="HF001", location_id=location.id)
+        service_pricelist = create_test_service_pricelist(location_id=location.id)
+        hf.services_pricelist = service_pricelist
+        hf.save()
+        pricelist_detail = add_service_to_hf_pricelist(service, hf_id=hf.id)
 
         # A first claim for a visit within the waiting period should be refused
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "health_facility_id": hf.id})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
 
@@ -568,13 +577,15 @@ class ValidationTest(TestCase):
             "date_from": datetime.datetime(2020, 2, 1),
             "date_to": datetime.datetime(2020, 2, 1),
             "date_claimed": datetime.datetime(2020, 2, 1),
+            "policy_id": policy.id,
+            "health_facility_id": hf.id,
         })
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertEqual(len(errors), 0, "This one should be accepted as after the waiting period")
 
         # a child should not have the waiting period
-        claim3 = create_test_claim({"insuree_id": child_insuree.id})
+        claim3 = create_test_claim({"insuree_id": child_insuree.id, "health_facility_id": hf.id, "policy_id": policy.id})
         service3 = create_test_claimservice(claim3, custom_props={"service_id": service.id})
         errors = validate_claim(claim3, True)
         self.assertEqual(len(errors), 0, "The child has no waiting period")
@@ -609,7 +620,7 @@ class ValidationTest(TestCase):
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id})
         item1 = create_test_claimitem(
@@ -685,7 +696,7 @@ class ValidationTest(TestCase):
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
         # The insuree has a patient_category of 6, not matching the service category
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id})
         item1 = create_test_claimitem(
@@ -756,7 +767,7 @@ class ValidationTest(TestCase):
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
         # The insuree has a patient_category of 6, not matching the service category
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id})
         item1 = create_test_claimitem(
@@ -827,7 +838,7 @@ class ValidationTest(TestCase):
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
         # The insuree has a patient_category of 6, not matching the service category
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id})
         item1 = create_test_claimitem(
@@ -901,7 +912,7 @@ class ValidationTest(TestCase):
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id, "qty_provided": 2})
         item1 = create_test_claimitem(
@@ -978,7 +989,7 @@ class ValidationTest(TestCase):
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id, "qty_provided": 2})
         item1 = create_test_claimitem(
@@ -1070,7 +1081,7 @@ class ValidationTest(TestCase):
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         service1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id})
         item1 = create_test_claimitem(
@@ -1158,7 +1169,7 @@ class ValidationTest(TestCase):
         pricelist_detail1 = add_service_to_hf_pricelist(service)
         pricelist_detail2 = add_item_to_hf_pricelist(item)
 
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "policy_id": policy.id})
         claimservice1 = create_test_claimservice(
             claim1, custom_props={"service_id": service.id})
         clalimitem1 = create_test_claimitem(
