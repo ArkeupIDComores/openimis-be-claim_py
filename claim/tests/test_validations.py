@@ -26,6 +26,7 @@ from policy.test_helpers import create_test_policy
 # noinspection PyDefaultArgument,DuplicatedCode
 from product.test_helpers import create_test_product, create_test_product_service, create_test_product_item
 from contribution_plan.tests.helpers import create_test_contribution_plan
+from datetime import date, timedelta
 
 
 class ValidationTest(TestCase):
@@ -288,6 +289,8 @@ class ValidationTest(TestCase):
     def test_frequency(self):
         # When the insuree already reaches his limit of visits
         # Given
+        today = date.today()
+        date1 = today - timedelta(days=30)
         insuree = create_test_insuree()
         self.assertIsNotNone(insuree)
         product = create_test_product("CSECT")
@@ -297,7 +300,7 @@ class ValidationTest(TestCase):
         pricelist_detail = add_service_to_hf_pricelist(service)
 
         # A first claim for a visit should be accepted
-        claim1 = create_test_claim({"insuree_id": insuree.id})
+        claim1 = create_test_claim({"insuree_id": insuree.id, "date_from": date1, "date_to": date1, "date_claimed": date1})
         service1 = create_test_claimservice(claim1, custom_props={"service_id": service.id})
         errors = validate_claim(claim1, True)
         mark_test_claim_as_processed(claim1)
@@ -305,7 +308,7 @@ class ValidationTest(TestCase):
         self.assertEquals(len(errors), 0, "The first visit should be accepted")
 
         # a second visit should be denied
-        claim2 = create_test_claim({"insuree_id": insuree.id})
+        claim2 = create_test_claim({"insuree_id": insuree.id, "date_from": today, "date_to": today, "date_claimed": today})
         service2 = create_test_claimservice(claim2, custom_props={"service_id": service.id})
         errors = validate_claim(claim2, True)
         self.assertGreater(len(errors), 0, "The second service should be refused as it is withing 180 days")
