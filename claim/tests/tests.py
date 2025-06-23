@@ -82,7 +82,7 @@ class ClaimGraphQLTestCase(openIMISGraphQLTestCase):
                     {
                         node
                         {
-                            uuid,code,jsonExt,dateClaimed,dateProcessed,feedbackStatus,reviewStatus,claimed,approved,status,restoreId,healthFacility { id uuid name code },insuree{id, uuid, chfId, lastName, otherNames, dob},attachmentsCount
+                            uuid,code,jsonExt,dateClaimed,dateProcessed,feedbackStatus,reviewStatus,claimed,approved,status,restoreId,healthFacility { id uuid name code },insuree{id, uuid, chfId, lastName, otherNames, dob},attachmentsCount, preAuthorization, patientCondition, referralCode
 
                         }
                     }
@@ -112,7 +112,7 @@ class ClaimGraphQLTestCase(openIMISGraphQLTestCase):
                     {
                         node
                         {
-                            uuid,code,jsonExt,dateClaimed,dateProcessed,feedbackStatus,reviewStatus,claimed,approved,status,restoreId,healthFacility { id uuid name code },insuree{id, uuid, chfId, lastName, otherNames, dob},attachmentsCount
+                            uuid,code,jsonExt,dateClaimed,dateProcessed,feedbackStatus,reviewStatus,claimed,approved,status,restoreId,healthFacility { id uuid name code },insuree{id, uuid, chfId, lastName, otherNames, dob},attachmentsCount, preAuthorization, patientCondition, referralCode
 
                         }
                     }
@@ -153,6 +153,9 @@ class ClaimGraphQLTestCase(openIMISGraphQLTestCase):
                 dateClaimed: "2023-12-06"
                 healthFacilityId: {self.claim_admin.health_facility.id}
                 visitType: "O"
+                preAuthorization: false
+                patientCondition: "R"
+                referralCode: "REF1"
                 services: [
                 {{
                 
@@ -198,6 +201,9 @@ class ClaimGraphQLTestCase(openIMISGraphQLTestCase):
                 dateClaimed: "2023-12-06"
                 healthFacilityId: {self.claim_admin.health_facility.id}
                 visitType: "O"
+                preAuthorization: false
+                patientCondition: "R"
+                referralCode: "REF1"
                 services: [
                 {{
                 
