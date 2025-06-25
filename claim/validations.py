@@ -221,7 +221,6 @@ def validate_claimitem_in_price_list(claim, claimitem):
                 items_pricelist=claim.health_facility.items_pricelist,
                 items_pricelist__validity_to__isnull=True
                 )
-    # pricelist_detail = get_queryset_valid_at_date(pricelist_detail_qs, target_date).first()
     if not pricelist_detail_qs:
         claimitem.rejection_reason = REJECTION_REASON_NOT_IN_PRICE_LIST
         errors += [{'code': REJECTION_REASON_NOT_IN_PRICE_LIST,
@@ -242,7 +241,6 @@ def validate_claimservice_in_price_list(claim, claimservice):
                 services_pricelist=claim.health_facility.services_pricelist,
                 services_pricelist__validity_to__isnull=True
                 )
-    # pricelist_detail = get_queryset_valid_at_date(pricelist_detail_qs, target_date).first()
     if not pricelist_detail_qs:
         claimservice.rejection_reason = REJECTION_REASON_NOT_IN_PRICE_LIST
         errors += [{'code': REJECTION_REASON_NOT_IN_PRICE_LIST,
