@@ -3,6 +3,7 @@ from claim.validations import get_claim_category, approved_amount
 from claim.services import claim_create, update_sum_claims
 from medical.test_helpers import get_item_of_type, get_service_of_category
 from uuid import uuid4
+from location.test_helpers import create_test_health_facility, create_test_location
 
 class DummyUser:
     def __init__(self):
@@ -12,10 +13,12 @@ def create_test_claim(custom_props={}, user = DummyUser() ):
     from core import datetime
     if 'insuree' not in custom_props and 'insuree_id' not in custom_props:
         custom_props["insuree_id"]= 2
+    location = create_test_location('D')
+    test_hf = create_test_health_facility('HF1', location.id)
 
     return claim_create(
         {
-            "health_facility_id": 18,
+            "health_facility_id": test_hf.id,
             "icd_id": 116,
             "date_from": datetime.datetime(2019, 6, 1),
             "date_claimed": datetime.datetime(2019, 6, 1),
@@ -91,6 +94,8 @@ def delete_claim_with_itemsvc_dedrem_and_history(claim):
 
 def create_test_claim_admin(custom_props={}):
     from core import datetime
+    location = create_test_location('D')
+    test_hf = create_test_health_facility('HF2', location.id)
     code = custom_props.pop('code','TST-CA')
     uuid = custom_props.pop('uuid',None)
     ca = None
@@ -102,7 +107,7 @@ def create_test_claim_admin(custom_props={}):
         "other_names": "JoeAdmin",
         "email_id": "joeadmin@lastadmin.com",
         "phone": "+12027621401",
-        "health_facility_id": 1,
+        "health_facility_id": test_hf.id,
         "has_login": False,
         "audit_user_id": 1,
         "validity_from": datetime.datetime(2019, 6, 1),
