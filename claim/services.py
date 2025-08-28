@@ -15,7 +15,7 @@ from core.signals import register_service_signal
 from .apps import ClaimConfig
 from django.conf import settings
 
-from claim.models import Claim, ClaimItem, ClaimService, ClaimDetail, ClaimDedRem, FeedbackPrompt
+from claim.models import Prescriber,PrescriberMutation,Speciality,Status,Claim, ClaimItem, ClaimService, ClaimDetail, ClaimDedRem, FeedbackPrompt
 from product.models import ProductItemOrService
 
 from claim.utils import process_items_relations, process_services_relations
@@ -734,3 +734,102 @@ def update_claims_dedrems(uuids, user):
         errors.append(_(
             "claim.validation.id_does_not_exist") % {'id': ','.join(remaining_uuid)})
     return errors
+
+
+class PrescriberService:
+    def __init__(self, user):
+        self.user = user
+
+    @register_service_signal('prescriber_service.create_or_update')
+    def create_or_update(self, data):
+        from core import datetime
+        now = datetime.datetime.now()
+        data['audit_user_id'] = self.user.id_for_audit
+        data['validity_from'] = now
+
+        authorized_hf_ids = data.pop('authorized_health_facilities', [])
+        
+        if "uuid" in data:
+            prescriber = Prescriber.objects.filter(uuid=data["uuid"]).first()
+            if prescriber:
+                return self._update(prescriber, data, authorized_hf_ids)
+        
+        return self._create(data, authorized_hf_ids)
+
+    def _create(self, data, authorized_hf_ids):
+        prescriber = Prescriber(**data)
+        prescriber.save()
+        
+        if authorized_hf_ids:
+            prescriber.authorized_health_facilities.set(authorized_hf_ids)
+        
+        return prescriber
+
+    def _update(self, prescriber, data, authorized_hf_ids):
+        prescriber.save_history()
+        [setattr(prescriber, key, data[key]) for key in data if key != 'id']
+        prescriber.save()
+        
+        if authorized_hf_ids is not None:
+            prescriber.authorized_health_facilities.set(authorized_hf_ids)
+        
+        return prescriber
+
+    @register_service_signal('prescriber_service.delete')
+    def set_deleted(self, prescriber):
+        try:
+            prescriber.delete_history()
+            return []
+        except Exception as exc:
+            logger.exception("prescriber.mutation.failed_to_delete_prescriber")
+            return {
+                'title': prescriber.nin,
+                'list': [{
+                    'message': _("prescriber.mutation.failed_to_delete_prescriber"),
+                    'detail': prescriber.uuid
+                }]
+            }
+    
+class SpecialityService:
+    def __init__(self, user):
+        self.user = user
+
+    @register_service_signal('speciality_service.create_or_update')
+    def create_or_update(self, data):
+        from core import datetime
+        now = datetime.datetime.now()
+        data['audit_user_id'] = self.user.id_for_audit
+        data['validity_from'] = now
+
+        if "uuid" in data:
+            speciality = Speciality.objects.filter(uuid=data["uuid"]).first()
+            if speciality:
+                return self._update(speciality, data)
+        
+        return self._create(data)
+
+    def _create(self, data):
+        speciality = Speciality(**data)
+        speciality.save()
+        return speciality
+
+    def _update(self, speciality, data):
+        speciality.save_history()
+        [setattr(speciality, key, data[key]) for key in data if key != 'id']
+        speciality.save()
+        return speciality
+
+    @register_service_signal('speciality_service.delete')
+    def set_deleted(self, speciality):
+        try:
+            speciality.delete_history()
+            return []
+        except Exception as exc:
+            logger.exception("speciality.mutation.failed_to_delete_speciality")
+            return {
+                'title': speciality.uuid,
+                'list': [{
+                    'message': _("speciality.mutation.failed_to_delete_speciality"),
+                    'detail': speciality.uuid
+                }]
+            }

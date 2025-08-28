@@ -13,10 +13,12 @@ from core.schema import OrderedDjangoFilterConnectionField, OfficerGQLType
 from core import filter_validity
 from django.db.models.functions import Cast
 
-from .models import ClaimMutation
+from .models import ClaimMutation,Prescriber,Speciality,Status,PrescriberMutation
 from django.utils.translation import gettext as _
 from graphene_django.filter import DjangoFilterConnectionField
 import ast
+from core.schema import signal_mutation_module_validate, signal_mutation_module_after_mutating,signal_mutation_module_before_mutating
+from django.dispatch import Signal
 
 # We do need all queries and mutations in the namespace here.
 from .gql_queries import *  # lgtm [py/polluting-import]
@@ -83,6 +85,25 @@ class Query(graphene.ObjectType):
         ClaimAttachmentTypeGQLType
     )
 
+    prescribers = OrderedDjangoFilterConnectionField(
+        PrescriberGQLType,
+        orderBy=graphene.List(of_type=graphene.String)
+    )
+
+    specialities = graphene.List(SpecialityGQLType)
+    statusOptions = graphene.List(StatusGQLType)
+
+    def resolve_prescribers(self, info, **kwargs):
+        if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
+            raise PermissionDenied(_("unauthorized"))
+        return Prescriber.objects.filter(*filter_validity(**kwargs))
+
+    def resolve_specialities(self, info, **kwargs):
+        return Speciality.objects.all()
+
+    def resolve_statusOptions(self, info, **kwargs):
+        return Status.objects.all()
+    
     def resolve_insuree_name_by_chfid(self, info, **kwargs):
         if not info.context.user.has_perms(ClaimConfig.gql_mutation_create_claims_perms)\
                 and not info.context.user.has_perms(ClaimConfig.gql_mutation_update_claims_perms):
@@ -270,6 +291,15 @@ class Query(graphene.ObjectType):
 
 
 class Mutation(graphene.ObjectType):
+
+    create_prescriber = CreatePrescriberMutation.Field()
+    update_prescriber = UpdatePrescriberMutation.Field()
+    delete_prescribers = DeletePrescribersMutation.Field()
+
+    create_speciality = CreateSpecialityMutation.Field()
+    update_speciality = UpdateSpecialityMutation.Field()
+    delete_specialities = DeleteSpecialitiesMutation.Field()
+
     create_claim = CreateClaimMutation.Field()
     update_claim = UpdateClaimMutation.Field()
     create_claim_attachment = CreateAttachmentMutation.Field()
@@ -302,6 +332,21 @@ def on_claim_mutation(sender, **kwargs):
             claim=claim, mutation_id=kwargs["mutation_log_id"])
     return []
 
+def on_prescriber_mutation(sender, **kwargs):
+    uuids = kwargs["data"].get("uuids", [])
+    # handle prescriber-specific logic here if needed
+    return []
+
+def on_prescriber_after_mutation(sender, **kwargs):
+    # handle post-mutation logic for prescriber
+    return []
+
+def on_speciality_mutation(sender, **kwargs):
+    uuids = kwargs["data"].get("uuids", [])
+    return []
+
+def on_speciality_after_mutation(sender, **kwargs):
+    return []
 
 def on_claim_after_mutation(sender, **kwargs):
     if kwargs.get('error_messages', None):
@@ -324,3 +369,23 @@ def on_claim_after_mutation(sender, **kwargs):
 def bind_signals():
     signal_mutation_module_validate["claim"].connect(on_claim_mutation)
     signal_mutation_module_after_mutating["claim"].connect(on_claim_after_mutation)
+
+    if "prescriber" not in signal_mutation_module_validate:
+        signal_mutation_module_validate["prescriber"] = Signal()
+    if "prescriber" not in signal_mutation_module_after_mutating:
+        signal_mutation_module_after_mutating["prescriber"] = Signal()
+    if "prescriber" not in signal_mutation_module_before_mutating:
+        signal_mutation_module_before_mutating["prescriber"] = Signal()
+
+    signal_mutation_module_validate["prescriber"].connect(on_prescriber_mutation)
+    signal_mutation_module_after_mutating["prescriber"].connect(on_prescriber_after_mutation)
+
+    if "speciality" not in signal_mutation_module_validate:
+        signal_mutation_module_validate["speciality"] = Signal()
+    if "speciality" not in signal_mutation_module_after_mutating:
+        signal_mutation_module_after_mutating["speciality"] = Signal()
+    if "speciality" not in signal_mutation_module_before_mutating:
+        signal_mutation_module_before_mutating["speciality"] = Signal()
+    
+    signal_mutation_module_validate["speciality"].connect(on_speciality_mutation)
+    signal_mutation_module_after_mutating["speciality"].connect(on_speciality_after_mutation)
