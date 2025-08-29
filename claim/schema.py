@@ -99,10 +99,10 @@ class Query(graphene.ObjectType):
         return Prescriber.objects.filter(*filter_validity(**kwargs))
 
     def resolve_specialities(self, info, **kwargs):
-        return Speciality.objects.all()
+        return Speciality.objects.filter(*filter_validity(**kwargs))
 
     def resolve_statusOptions(self, info, **kwargs):
-        return Status.objects.all()
+        return Status.objects.filter(*filter_validity(**kwargs))
     
     def resolve_insuree_name_by_chfid(self, info, **kwargs):
         if not info.context.user.has_perms(ClaimConfig.gql_mutation_create_claims_perms)\
