@@ -1142,6 +1142,7 @@ class DeletePrescribersMutation(OpenIMISMutation):
 class SpecialityInputType(OpenIMISMutation.Input):
     id = graphene.Int(required=False, read_only=True)
     uuid = graphene.String(required=False)
+    code = graphene.String(max_length=50, required=False)
     speciality = graphene.String(max_length=150, required=True)
     alt_language = graphene.String(max_length=150, required=False)
     json_ext = graphene.types.json.JSONString(required=False)

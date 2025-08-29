@@ -50,6 +50,7 @@ class Migration(migrations.Migration):
                 ('legacy_id', models.IntegerField(blank=True, db_column='LegacyID', null=True)),
                 ('id', models.AutoField(db_column='SpecialityID', primary_key=True, serialize=False)),
                 ('uuid', models.CharField(db_column='SpecialityUUID', default=uuid.uuid4, max_length=36, unique=True)),
+                ('code', models.CharField(blank=True, db_column='SpecialityCode', max_length=150, null=True)),
                 ('speciality', models.CharField(blank=True, db_column='Speciality', max_length=150, null=True)),
                 ('alt_language', models.CharField(blank=True, db_column='AltLanguage', max_length=150, null=True)),
                 ('audit_user_id', models.IntegerField(db_column='AuditUserID')),

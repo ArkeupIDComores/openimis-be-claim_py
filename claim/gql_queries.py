@@ -214,6 +214,7 @@ class SpecialityGQLType(DjangoObjectType):
         model = Speciality
         filter_fields = {
             "uuid": ["exact","icontains"],
+            "code": ["exact", "icontains"],
             "speciality": ["exact", "icontains"]
         }
         interfaces = (graphene.relay.Node,)
