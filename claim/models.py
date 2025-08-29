@@ -630,6 +630,7 @@ class ClaimDedRem(core_models.VersionedModel):
 class Speciality(core_models.VersionedModel, core_models.ExtendableModel):
     id = models.AutoField(db_column='SpecialityID', primary_key=True)
     uuid = models.CharField(db_column='SpecialityUUID', max_length=36, default=uuid.uuid4, unique=True)
+    code = models.CharField(db_column='SpecialityCode', max_length=50, blank=True, null=True)
     speciality = models.CharField(db_column='Speciality', max_length=150, blank=True, null=True)
     alt_language = models.CharField(db_column='AltLanguage', max_length=150, blank=True, null=True)
     audit_user_id = models.IntegerField(db_column='AuditUserID')
