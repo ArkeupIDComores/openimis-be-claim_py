@@ -90,8 +90,12 @@ class Query(graphene.ObjectType):
         orderBy=graphene.List(of_type=graphene.String)
     )
 
-    specialities = OrderedDjangoFilterConnectionField(SpecialityGQLType)
-    statusOptions = OrderedDjangoFilterConnectionField(StatusGQLType)
+    specialities = OrderedDjangoFilterConnectionField(
+        SpecialityGQLType,
+        orderBy=graphene.List(of_type=graphene.String))
+    statusOptions = OrderedDjangoFilterConnectionField(
+        StatusGQLType,
+        orderBy=graphene.List(of_type=graphene.String))
 
     def resolve_prescribers(self, info, **kwargs):
         if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
