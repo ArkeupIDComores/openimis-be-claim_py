@@ -4,7 +4,7 @@ import logging
 from typing import Callable, Dict
 
 from medical.models import Item, Service
-
+from location import models as location_models
 import core
 from core.models import Officer
 from core.utils import filter_validity
@@ -747,8 +747,25 @@ class PrescriberService:
         data['audit_user_id'] = self.user.id_for_audit
         data['validity_from'] = now
 
-        authorized_hf_ids = data.pop('authorized_health_facilities', [])
-        
+        speciality_uuid = data.pop("speciality_uuid", None)
+        if speciality_uuid:
+            speciality = Speciality.objects.filter(uuid=speciality_uuid).first()
+            if speciality:
+                data["speciality_id"] = speciality.id
+
+        main_health_facility_uuid = data.pop("main_health_facility_uuid", None)  
+        if main_health_facility_uuid:
+            main_health_facility = location_models.HealthFacility.objects.filter(uuid=main_health_facility_uuid).first()
+            if main_health_facility:
+                data["main_health_facility_id"] = main_health_facility.id
+
+        authorized_health_facility_uuids = data.pop("authorized_health_facilities_uuids", [])  
+        authorized_hf_ids = []
+        for uuid in authorized_health_facility_uuids:
+            authorized_hf = location_models.HealthFacility.objects.filter(uuid=uuid).first()
+            if authorized_hf:
+                authorized_hf_ids.append(authorized_hf.id)
+       
         if "uuid" in data:
             prescriber = Prescriber.objects.filter(uuid=data["uuid"]).first()
             if prescriber:
