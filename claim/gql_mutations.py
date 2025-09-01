@@ -1175,10 +1175,8 @@ class CreateSpecialityMutation(OpenIMISMutation):
             data['audit_user_id'] = user.id_for_audit
             client_mutation_id = data.get("client_mutation_id")
             speciality = update_or_create_speciality(data, user)
-            SpecialityMutation.objects.create(
-                speciality=speciality, 
-                mutation_id=client_mutation_id
-            )
+            SpecialityMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, speciality=speciality)
             return None
         except Exception as exc:
             logger.exception("speciality.mutation.failed_to_create_speciality")
@@ -1204,10 +1202,8 @@ class UpdateSpecialityMutation(OpenIMISMutation):
             data['audit_user_id'] = user.id_for_audit
             client_mutation_id = data.get("client_mutation_id")
             speciality = update_or_create_speciality(data, user)
-            SpecialityMutation.objects.create(
-                speciality=speciality, 
-                mutation_id=client_mutation_id
-            )
+            SpecialityMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, speciality=speciality)
             return None
         except Exception as exc:
             logger.exception("speciality.mutation.failed_to_update_speciality")
