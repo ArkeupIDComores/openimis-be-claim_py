@@ -247,6 +247,7 @@ class PrescriberGQLType(DjangoObjectType):
         model = Prescriber
         filter_fields = {
             "uuid": ["exact"],
+            "code": ["exact", "icontains"],
             "nin": ["exact", "istartswith"],
             "last_name": ["exact", "icontains"],
             "other_names": ["exact", "icontains"],
