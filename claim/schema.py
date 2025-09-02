@@ -93,9 +93,8 @@ class Query(graphene.ObjectType):
     specialities = OrderedDjangoFilterConnectionField(
         SpecialityGQLType,
         orderBy=graphene.List(of_type=graphene.String))
-    statusOptions = OrderedDjangoFilterConnectionField(
-        StatusGQLType,
-        orderBy=graphene.List(of_type=graphene.String))
+    
+    statusOptions = graphene.List(StatusGQLType)
 
     def resolve_prescribers(self, info, **kwargs):
         if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
@@ -106,7 +105,7 @@ class Query(graphene.ObjectType):
         return Speciality.objects.filter(*filter_validity(**kwargs))
 
     def resolve_statusOptions(self, info, **kwargs):
-        return Status.objects.filter(*filter_validity(**kwargs))
+        return Status.objects.all()
     
     def resolve_insuree_name_by_chfid(self, info, **kwargs):
         if not info.context.user.has_perms(ClaimConfig.gql_mutation_create_claims_perms)\
