@@ -248,10 +248,10 @@ class PrescriberGQLType(DjangoObjectType):
         filter_fields = {
             "uuid": ["exact"],
             "code": ["exact", "icontains"],
-            "nin": ["exact", "istartswith"],
+            "nin": ["exact", "istartswith","icontains"],
             "last_name": ["exact", "icontains"],
             "other_names": ["exact", "icontains"],
-            "phone": ["exact"],
+            "phone": ["exact","icontains"],
             "entry_date": ["exact", "lt", "lte", "gt", "gte"],
             "release_date": ["exact", "lt", "lte", "gt", "gte"],
             **prefix_filterset("main_health_facility__", HealthFacilityGQLType._meta.filter_fields),
