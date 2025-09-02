@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('legacy_id', models.IntegerField(blank=True, db_column='LegacyID', null=True)),
                 ('id', models.AutoField(db_column='PrescriberID', primary_key=True, serialize=False)),
                 ('uuid', models.CharField(db_column='PrescriberUUID', default=uuid.uuid4, max_length=36, unique=True)),
-                ('code', models.CharField(db_column='SpecialityCode', max_length=50)),
+                ('code', models.CharField(db_column='PrescriberCode', max_length=50)),
                 ('last_name', models.CharField(db_column='LastName', max_length=100)),
                 ('other_names', models.CharField(db_column='OtherNames', max_length=100)),
                 ('nin', models.CharField(db_column='NIN', max_length=9)),

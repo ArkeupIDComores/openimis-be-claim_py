@@ -661,7 +661,7 @@ class Status(models.Model):
 class Prescriber(core_models.VersionedModel, core_models.ExtendableModel):
     id = models.AutoField(db_column='PrescriberID', primary_key=True)
     uuid = models.CharField(db_column='PrescriberUUID', max_length=36, default=uuid.uuid4, unique=True)
-    code = models.CharField(db_column='SpecialityCode', max_length=50) 
+    code = models.CharField(db_column='PrescriberCode', max_length=50) 
     last_name = models.CharField(db_column='LastName', max_length=100)
     other_names = models.CharField(db_column='OtherNames', max_length=100)
     nin = models.CharField(db_column='NIN', max_length=9)
