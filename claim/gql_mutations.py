@@ -1076,10 +1076,8 @@ class CreatePrescriberMutation(OpenIMISMutation):
             data['audit_user_id'] = user.id_for_audit
             client_mutation_id = data.get("client_mutation_id")
             prescriber = update_or_create_prescriber(data, user)
-            PrescriberMutation.objects.create(
-                prescriber=prescriber, 
-                mutation_id=client_mutation_id
-            )
+            PrescriberMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, prescriber=prescriber)
             return None
         except Exception as exc:
             logger.exception("prescriber.mutation.failed_to_create_prescriber")
@@ -1103,10 +1101,8 @@ class UpdatePrescriberMutation(OpenIMISMutation):
             data['audit_user_id'] = user.id_for_audit
             client_mutation_id = data.get("client_mutation_id")
             prescriber = update_or_create_prescriber(data, user)
-            PrescriberMutation.objects.create(
-                prescriber=prescriber, 
-                mutation_id=client_mutation_id
-            )
+            PrescriberMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, prescriber=prescriber)
             return None
         except Exception as exc:
             logger.exception("prescriber.mutation.failed_to_update_prescriber")
