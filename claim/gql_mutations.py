@@ -1036,6 +1036,7 @@ def validate_and_process_dedrem_claim(claim, user, is_process):
 class PrescriberBase:
     id = graphene.Int(required=False, read_only=True)
     uuid = graphene.String(required=False)
+    code = graphene.String(required=True)
     last_name = graphene.String(max_length=100, required=True)
     other_names = graphene.String(max_length=100, required=True)
     nin = graphene.String(max_length=9, required=True)
