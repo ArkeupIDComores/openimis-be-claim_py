@@ -14,6 +14,64 @@ from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
 
 
+
+class SpecialityGQLType(DjangoObjectType):
+    class Meta:
+        model = Speciality
+        filter_fields = {
+            "uuid": ["exact","icontains"],
+            "code": ["exact", "icontains"],
+            "speciality": ["exact", "icontains"]
+        }
+        interfaces = (graphene.relay.Node,)
+        connection_class = ExtendedConnection
+
+
+class StatusGQLType(DjangoObjectType):
+    class Meta:
+        model = Status
+        filter_fields = {
+            "code": ["exact"],
+            "status": ["exact", "icontains"]
+        }
+        interfaces = (graphene.relay.Node,)
+        connection_class = ExtendedConnection
+
+
+class PrescriberGQLType(DjangoObjectType):
+    client_mutation_id = graphene.String()
+    authorized_health_facilities = graphene.List(HealthFacilityGQLType)
+
+    def resolve_authorized_health_facilities(self, info):
+        return self.authorized_health_facilities.all()
+
+    def resolve_main_health_facility(self, info):
+        if "health_facility_loader" in info.context.dataloaders:
+            return info.context.dataloaders["health_facility_loader"].load(self.main_health_facility_id)
+
+    class Meta:
+        model = Prescriber
+        filter_fields = {
+            "uuid": ["exact"],
+            "code": ["exact", "icontains"],
+            "nin": ["exact", "istartswith","icontains"],
+            "last_name": ["exact", "icontains"],
+            "other_names": ["exact", "icontains"],
+            "phone": ["exact","icontains"],
+            "entry_date": ["exact", "lt", "lte", "gt", "gte"],
+            "release_date": ["exact", "lt", "lte", "gt", "gte"],
+            **prefix_filterset("main_health_facility__", HealthFacilityGQLType._meta.filter_fields),
+            **prefix_filterset("speciality__", SpecialityGQLType._meta.filter_fields),
+            **prefix_filterset("status__", StatusGQLType._meta.filter_fields)
+        }
+        interfaces = (graphene.relay.Node,)
+        connection_class = ExtendedConnection
+
+    def resolve_client_mutation_id(self, info):
+        prescriber_mutation = self.mutations.select_related('mutation').filter(mutation__status=0).first()
+        return prescriber_mutation.mutation.client_mutation_id if prescriber_mutation else None
+    
+
 class ClaimDedRemGQLType(DjangoObjectType):
     """
     Details about Claim demands and remunerated amounts
@@ -103,6 +161,7 @@ class ClaimGQLType(DjangoObjectType):
             **prefix_filterset("admin__", ClaimAdminGQLType._meta.filter_fields),
             **prefix_filterset("health_facility__", HealthFacilityGQLType._meta.filter_fields),
             **prefix_filterset("insuree__", InsureeGQLType._meta.filter_fields),
+            **prefix_filterset("prescriber__", PrescriberGQLType._meta.filter_fields),
             **prefix_filterset("batch_run__", BatchRunGQLType._meta.filter_fields)
         }
         connection_class = ExtendedConnection
@@ -207,60 +266,3 @@ class ClaimServiceItemGQLType(DjangoObjectType):
 
     class Meta:
         model = ClaimServiceItem
-
-
-class SpecialityGQLType(DjangoObjectType):
-    class Meta:
-        model = Speciality
-        filter_fields = {
-            "uuid": ["exact","icontains"],
-            "code": ["exact", "icontains"],
-            "speciality": ["exact", "icontains"]
-        }
-        interfaces = (graphene.relay.Node,)
-        connection_class = ExtendedConnection
-
-
-class StatusGQLType(DjangoObjectType):
-    class Meta:
-        model = Status
-        filter_fields = {
-            "code": ["exact"],
-            "status": ["exact", "icontains"]
-        }
-        interfaces = (graphene.relay.Node,)
-        connection_class = ExtendedConnection
-
-
-class PrescriberGQLType(DjangoObjectType):
-    client_mutation_id = graphene.String()
-    authorized_health_facilities = graphene.List(HealthFacilityGQLType)
-
-    def resolve_authorized_health_facilities(self, info):
-        return self.authorized_health_facilities.all()
-
-    def resolve_main_health_facility(self, info):
-        if "health_facility_loader" in info.context.dataloaders:
-            return info.context.dataloaders["health_facility_loader"].load(self.main_health_facility_id)
-
-    class Meta:
-        model = Prescriber
-        filter_fields = {
-            "uuid": ["exact"],
-            "code": ["exact", "icontains"],
-            "nin": ["exact", "istartswith","icontains"],
-            "last_name": ["exact", "icontains"],
-            "other_names": ["exact", "icontains"],
-            "phone": ["exact","icontains"],
-            "entry_date": ["exact", "lt", "lte", "gt", "gte"],
-            "release_date": ["exact", "lt", "lte", "gt", "gte"],
-            **prefix_filterset("main_health_facility__", HealthFacilityGQLType._meta.filter_fields),
-            **prefix_filterset("speciality__", SpecialityGQLType._meta.filter_fields),
-            **prefix_filterset("status__", StatusGQLType._meta.filter_fields)
-        }
-        interfaces = (graphene.relay.Node,)
-        connection_class = ExtendedConnection
-
-    def resolve_client_mutation_id(self, info):
-        prescriber_mutation = self.mutations.select_related('mutation').filter(mutation__status=0).first()
-        return prescriber_mutation.mutation.client_mutation_id if prescriber_mutation else None
