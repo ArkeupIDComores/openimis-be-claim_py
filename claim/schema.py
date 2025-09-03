@@ -92,6 +92,7 @@ class Query(graphene.ObjectType):
 
     specialities = OrderedDjangoFilterConnectionField(
         SpecialityGQLType,
+        str=graphene.String(),
         orderBy=graphene.List(of_type=graphene.String))
     
     statusOptions = graphene.List(StatusGQLType)
@@ -102,7 +103,11 @@ class Query(graphene.ObjectType):
         return Prescriber.objects.filter(*filter_validity(**kwargs))
 
     def resolve_specialities(self, info, **kwargs):
-        return Speciality.objects.filter(*filter_validity(**kwargs))
+        filters = [*filter_validity(**kwargs)]
+        search = kwargs.get('str')
+        if search is not None:
+            filters += [Q(code__icontains=search) | Q(speciality__icontains=search)]
+        return Speciality.objects.filter(*filters)
 
     def resolve_statusOptions(self, info, **kwargs):
         return Status.objects.all()

@@ -19,6 +19,79 @@ from django.utils import timezone as django_tz
 core_config = apps.get_app_config('core')
 
 
+
+class Speciality(core_models.VersionedModel, core_models.ExtendableModel):
+    id = models.AutoField(db_column='SpecialityID', primary_key=True)
+    uuid = models.CharField(db_column='SpecialityUUID', max_length=36, default=uuid.uuid4, unique=True)
+    code = models.CharField(db_column='SpecialityCode', max_length=50) 
+    speciality = models.CharField(db_column='Speciality', max_length=150, blank=True, null=True)
+    alt_language = models.CharField(db_column='AltLanguage', max_length=150, blank=True, null=True)
+    audit_user_id = models.IntegerField(db_column='AuditUserID')
+
+    class Meta:
+        managed = True
+        db_table = 'tblSpeciality'
+
+class SpecialityMutation(core_models.UUIDModel, core_models.ObjectMutation):
+    speciality = models.ForeignKey(Speciality, models.DO_NOTHING, related_name='mutations')
+    mutation = models.ForeignKey(core_models.MutationLog, models.DO_NOTHING, related_name='specialities')
+
+    class Meta:
+        managed = True
+        db_table = "speciality_SpecialityMutation"
+
+class Status(models.Model):
+    code = models.IntegerField(db_column='Code', primary_key=True)
+    status = models.CharField(db_column='Status', max_length=150, blank=True, null=True)
+    alt_language = models.CharField(db_column='AltLanguage', max_length=150, blank=True, null=True)
+    sort_order = models.IntegerField(db_column='SortOrder', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'tblStatus'
+
+
+class Prescriber(core_models.VersionedModel, core_models.ExtendableModel):
+    id = models.AutoField(db_column='PrescriberID', primary_key=True)
+    uuid = models.CharField(db_column='PrescriberUUID', max_length=36, default=uuid.uuid4, unique=True)
+    code = models.CharField(db_column='PrescriberCode', max_length=50) 
+    last_name = models.CharField(db_column='LastName', max_length=100)
+    other_names = models.CharField(db_column='OtherNames', max_length=100)
+    nin = models.CharField(db_column='NIN', max_length=9)
+    phone = models.CharField(db_column='Phone', max_length=50, blank=True, null=True)
+    main_health_facility = models.ForeignKey(
+        location_models.HealthFacility,
+        models.DO_NOTHING,
+        db_column='MainHFId',
+        related_name='main_prescribers'
+    )
+    speciality = models.ForeignKey(Speciality, models.DO_NOTHING, db_column='Speciality', blank=True, null=True)
+    status = models.ForeignKey(Status, models.DO_NOTHING, db_column='Status', blank=True, null=True)
+    authorized_health_facilities = models.ManyToManyField(
+        location_models.HealthFacility,
+        related_name="authorized_prescribers",
+        db_table="prescriber_authorized_hf"
+    )
+    entry_date = models.DateField(db_column='EntryDate', blank=True, null=True)
+    release_date = models.DateField(db_column='ReleaseDate', blank=True, null=True)
+    audit_user_id = models.IntegerField(db_column='AuditUserID')
+
+    def __str__(self):
+        return f"{self.nin} {self.last_name} {self.other_names}"
+
+    class Meta:
+        managed = True
+        db_table = 'tblPrescriber'
+
+
+class PrescriberMutation(core_models.UUIDModel, core_models.ObjectMutation):
+    prescriber = models.ForeignKey(Prescriber, models.DO_NOTHING, related_name='mutations')
+    mutation = models.ForeignKey(core_models.MutationLog, models.DO_NOTHING, related_name='prescribers')
+
+    class Meta:
+        managed = True
+        db_table = "prescriber_PrescriberMutation"
+
 class ClaimAdmin(core_models.VersionedModel):
     id = models.AutoField(db_column='ClaimAdminId', primary_key=True)
     uuid = models.CharField(db_column='ClaimAdminUUID', max_length=36, default=uuid.uuid4, unique=True)
@@ -234,7 +307,11 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
         medical_models.Diagnosis, models.DO_NOTHING, db_column='ICDID4',
         related_name="claim_icd4s",
         blank=True, null=True)
-
+            
+    prescriber = models.ForeignKey(
+        Prescriber, models.DO_NOTHING, db_column='PrescriberID',
+        blank=True, null=True)
+    
     visit_type = models.CharField(
         db_column='VisitType', max_length=1, blank=True, null=True)
     audit_user_id_review = models.IntegerField(
@@ -626,75 +703,3 @@ class ClaimDedRem(core_models.VersionedModel):
     class Meta:
         managed = True
         db_table = 'tblClaimDedRem'
-
-class Speciality(core_models.VersionedModel, core_models.ExtendableModel):
-    id = models.AutoField(db_column='SpecialityID', primary_key=True)
-    uuid = models.CharField(db_column='SpecialityUUID', max_length=36, default=uuid.uuid4, unique=True)
-    code = models.CharField(db_column='SpecialityCode', max_length=50) 
-    speciality = models.CharField(db_column='Speciality', max_length=150, blank=True, null=True)
-    alt_language = models.CharField(db_column='AltLanguage', max_length=150, blank=True, null=True)
-    audit_user_id = models.IntegerField(db_column='AuditUserID')
-
-    class Meta:
-        managed = True
-        db_table = 'tblSpeciality'
-
-class SpecialityMutation(core_models.UUIDModel, core_models.ObjectMutation):
-    speciality = models.ForeignKey(Speciality, models.DO_NOTHING, related_name='mutations')
-    mutation = models.ForeignKey(core_models.MutationLog, models.DO_NOTHING, related_name='specialities')
-
-    class Meta:
-        managed = True
-        db_table = "speciality_SpecialityMutation"
-
-class Status(models.Model):
-    code = models.IntegerField(db_column='Code', primary_key=True)
-    status = models.CharField(db_column='Status', max_length=150, blank=True, null=True)
-    alt_language = models.CharField(db_column='AltLanguage', max_length=150, blank=True, null=True)
-    sort_order = models.IntegerField(db_column='SortOrder', blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'tblStatus'
-
-
-class Prescriber(core_models.VersionedModel, core_models.ExtendableModel):
-    id = models.AutoField(db_column='PrescriberID', primary_key=True)
-    uuid = models.CharField(db_column='PrescriberUUID', max_length=36, default=uuid.uuid4, unique=True)
-    code = models.CharField(db_column='PrescriberCode', max_length=50) 
-    last_name = models.CharField(db_column='LastName', max_length=100)
-    other_names = models.CharField(db_column='OtherNames', max_length=100)
-    nin = models.CharField(db_column='NIN', max_length=9)
-    phone = models.CharField(db_column='Phone', max_length=50, blank=True, null=True)
-    main_health_facility = models.ForeignKey(
-        location_models.HealthFacility,
-        models.DO_NOTHING,
-        db_column='MainHFId',
-        related_name='main_prescribers'
-    )
-    speciality = models.ForeignKey(Speciality, models.DO_NOTHING, db_column='Speciality', blank=True, null=True)
-    status = models.ForeignKey(Status, models.DO_NOTHING, db_column='Status', blank=True, null=True)
-    authorized_health_facilities = models.ManyToManyField(
-        location_models.HealthFacility,
-        related_name="authorized_prescribers",
-        db_table="prescriber_authorized_hf"
-    )
-    entry_date = models.DateField(db_column='EntryDate', blank=True, null=True)
-    release_date = models.DateField(db_column='ReleaseDate', blank=True, null=True)
-    audit_user_id = models.IntegerField(db_column='AuditUserID')
-
-    def __str__(self):
-        return f"{self.nin} {self.last_name} {self.other_names}"
-
-    class Meta:
-        managed = True
-        db_table = 'tblPrescriber'
-
-
-class PrescriberMutation(core_models.UUIDModel, core_models.ObjectMutation):
-    prescriber = models.ForeignKey(Prescriber, models.DO_NOTHING, related_name='mutations')
-    mutation = models.ForeignKey(core_models.MutationLog, models.DO_NOTHING, related_name='prescribers')
-
-    class Meta:
-        managed = True
-        db_table = "prescriber_PrescriberMutation"

@@ -263,6 +263,7 @@ class ClaimInputType(OpenIMISMutation.Input):
     pre_authorization = graphene.Boolean(required=False)
     patient_condition = graphene.String(required=False)
     referral_code = graphene.String(required=False)
+    prescriber_uuid=graphene.String(required=True)
 
     items = graphene.List(ClaimItemInputType, required=False)
     services = graphene.List(ClaimServiceInputType, required=False)
@@ -359,6 +360,7 @@ class CreateClaimMutation(OpenIMISMutation):
             from core.utils import TimeUtils
             data['validity_from'] = TimeUtils.now()
             attachments = data.pop('attachments') if 'attachments' in data else None
+            
             claim = update_or_create_claim(data, user)
             if attachments:
                 create_attachments(claim.id, attachments)
