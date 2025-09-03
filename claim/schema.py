@@ -104,7 +104,7 @@ class Query(graphene.ObjectType):
         filters = [*filter_validity(**kwargs)]
         search = kwargs.get('str')
         if search is not None:
-            filters += [Q(code__icontains=search) | Q(last_name__icontains=search) | Q(other_names__icontains=search)]
+            filters += [Q(code__icontains=search) | Q(last_name__icontains=search) | Q(other_names__icontains=search) | Q(nin__icontains=search) ]
         return Prescriber.objects.filter(*filters)
 
     def resolve_specialities(self, info, **kwargs):
