@@ -434,9 +434,9 @@ def _get_autogenerating_func() -> Callable[[Dict], Callable]:
 def claim_create(data, user, autogenerate_code = False):
     prescriber_uuid = data.pop("prescriber_uuid", None)
     if prescriber_uuid:
-        precriber = Speciality.objects.filter(uuid=prescriber_uuid).first()
-        if precriber:
-            data["precriber_id"] = precriber.id
+        prescriber = Prescriber.objects.filter(uuid=prescriber_uuid).first()
+        if prescriber:
+            data["prescriber_id"] = prescriber.id
     restore = data.pop('restore', None)
     autogenerate_code = data.pop('autogenerate', None)
     if restore:
@@ -455,9 +455,9 @@ def claim_create(data, user, autogenerate_code = False):
 def claim_update(claim, data, user):
     prescriber_uuid = data.pop("prescriber_uuid", None)
     if prescriber_uuid:
-        precriber = Speciality.objects.filter(uuid=prescriber_uuid).first()
-        if precriber:
-            data["precriber_id"] = precriber.id
+        prescriber = Prescriber.objects.filter(uuid=prescriber_uuid).first()
+        if prescriber:
+            data["prescriber_id"] = prescriber.id
     claim.save_history()
     # reset the non required fields
     # (each update is 'complete', necessary to be able to set 'null')
