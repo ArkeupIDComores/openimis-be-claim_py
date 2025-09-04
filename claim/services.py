@@ -436,6 +436,10 @@ def claim_create(data, user, autogenerate_code = False):
     if prescriber_uuid:
         prescriber = Prescriber.objects.filter(uuid=prescriber_uuid).first()
         if prescriber:
+            health_facility_id= data.get('health_facility_id')
+            if prescriber.main_health_facility.id != health_facility_id and \
+                (not prescriber.authorized_health_facilities.filter(id=health_facility_id).exists()):
+                raise ValidationError(_("mutation.prescriber_not_authorized_in_hf"))
             data["prescriber_id"] = prescriber.id
     restore = data.pop('restore', None)
     autogenerate_code = data.pop('autogenerate', None)
@@ -456,6 +460,10 @@ def claim_update(claim, data, user):
     prescriber_uuid = data.pop("prescriber_uuid", None)
     if prescriber_uuid:
         prescriber = Prescriber.objects.filter(uuid=prescriber_uuid).first()
+        health_facility_id= data.get('health_facility_id')
+        if prescriber.main_health_facility.id != health_facility_id and \
+            (not prescriber.authorized_health_facilities.filter(id=health_facility_id).exists()):
+            raise ValidationError(_("mutation.prescriber_not_authorized_in_hf"))
         if prescriber:
             data["prescriber_id"] = prescriber.id
     claim.save_history()
