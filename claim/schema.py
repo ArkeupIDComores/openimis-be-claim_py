@@ -88,6 +88,7 @@ class Query(graphene.ObjectType):
     prescribers = OrderedDjangoFilterConnectionField(
         PrescriberGQLType,
         str=graphene.String(),
+        hf=graphene.String(),
         orderBy=graphene.List(of_type=graphene.String)
     )
 
@@ -103,9 +104,15 @@ class Query(graphene.ObjectType):
             raise PermissionDenied(_("unauthorized"))
         filters = [*filter_validity(**kwargs)]
         search = kwargs.get('str')
+        hf=kwargs.get('hf')
         if search is not None:
             filters += [Q(code__icontains=search) | Q(last_name__icontains=search) | Q(other_names__icontains=search) | Q(nin__icontains=search) ]
-        return Prescriber.objects.filter(*filters)
+        if hf is not None:
+            filters +=[
+            Q(main_health_facility__uuid=hf) |
+            Q(authorized_health_facilities__uuid=hf)
+        ]
+        return Prescriber.objects.filter(*filters).distinct()
 
     def resolve_specialities(self, info, **kwargs):
         filters = [*filter_validity(**kwargs)]
