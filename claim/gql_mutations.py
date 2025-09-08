@@ -25,7 +25,7 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.utils.translation import gettext as _
 from graphene import InputObjectType
 from claim.gql_queries import ClaimGQLType
-from claim.models import Claim, Feedback, FeedbackPrompt, ClaimDetail, ClaimItem, ClaimService, ClaimAttachment, \
+from claim.models import SpecialityMutation,Prescriber,PrescriberMutation,Status,Speciality,Claim, Feedback, FeedbackPrompt, ClaimDetail, ClaimItem, ClaimService, ClaimAttachment, \
     ClaimDedRem, GeneralClaimAttachmentType, ClaimAttachmentType,ClaimServiceService
 from claim.attachment_strategies import *
 
@@ -33,7 +33,7 @@ from product.models import ProductItemOrService
 from medical.models import Item, Service
 
 from claim.utils import process_items_relations, process_services_relations
-from claim.services import validate_claim_data as service_validate_claim_data, \
+from claim.services import PrescriberService, SpecialityService,validate_claim_data as service_validate_claim_data, \
         update_or_create_claim as service_update_or_create_claim, check_unique_claim_code, submit_claim,\
             validate_and_process_dedrem_claim as service_validate_and_process_dedrem_claim,\
             create_feedback_prompt as service_create_feedback_prompt, update_claims_dedrems,\
@@ -263,6 +263,7 @@ class ClaimInputType(OpenIMISMutation.Input):
     pre_authorization = graphene.Boolean(required=False)
     patient_condition = graphene.String(required=False)
     referral_code = graphene.String(required=False)
+    prescriber_uuid=graphene.String(required=True)
 
     items = graphene.List(ClaimItemInputType, required=False)
     services = graphene.List(ClaimServiceInputType, required=False)
@@ -359,6 +360,7 @@ class CreateClaimMutation(OpenIMISMutation):
             from core.utils import TimeUtils
             data['validity_from'] = TimeUtils.now()
             attachments = data.pop('attachments') if 'attachments' in data else None
+            
             claim = update_or_create_claim(data, user)
             if attachments:
                 create_attachments(claim.id, attachments)
@@ -1031,3 +1033,203 @@ def set_claim_deleted(claim):
 
 def validate_and_process_dedrem_claim(claim, user, is_process):
     return service_validate_and_process_dedrem_claim(claim, user, is_process)
+
+
+class PrescriberBase:
+    id = graphene.Int(required=False, read_only=True)
+    uuid = graphene.String(required=False)
+    code = graphene.String(required=True)
+    last_name = graphene.String(max_length=100, required=True)
+    other_names = graphene.String(max_length=100, required=True)
+    nin = graphene.String(max_length=9, required=True)
+    phone = graphene.String(max_length=50, required=False)
+    main_health_facility_uuid=graphene.String(required=True)
+    speciality_uuid = graphene.String(required=True)
+    status_id = graphene.Int(required=False)
+    authorized_health_facilities_uuids = graphene.List(graphene.String, required=False)
+    entry_date = graphene.Date(required=False)
+    release_date = graphene.Date(required=False)
+    json_ext = graphene.types.json.JSONString(required=False)
+
+class CreatePrescriberInputType(PrescriberBase, OpenIMISMutation.Input):
+    pass
+
+class UpdatePrescriberInputType(PrescriberBase, OpenIMISMutation.Input):
+    pass
+
+def update_or_create_prescriber(data, user):
+    data.pop('client_mutation_id', None)
+    data.pop('client_mutation_label', None)
+    return PrescriberService(user).create_or_update(data)
+
+class CreatePrescriberMutation(OpenIMISMutation):
+    _mutation_module = "prescriber"
+    _mutation_class = "CreatePrescriberMutation"
+
+    class Input(CreatePrescriberInputType):
+        pass
+    
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        try:
+            if not user.has_perms(ClaimConfig.gql_mutation_create_claims_perms):
+                raise PermissionDenied(_("unauthorized"))
+            data['audit_user_id'] = user.id_for_audit
+            client_mutation_id = data.get("client_mutation_id")
+            prescriber = update_or_create_prescriber(data, user)
+            PrescriberMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, prescriber=prescriber)
+            return None
+        except Exception as exc:
+            logger.exception("prescriber.mutation.failed_to_create_prescriber")
+            return [{
+                'message': _("prescriber.mutation.failed_to_create_prescriber"),
+                'detail': str(exc)
+            }]
+
+class UpdatePrescriberMutation(OpenIMISMutation):
+    _mutation_module = "prescriber"
+    _mutation_class = "UpdatePrescriberMutation"
+
+    class Input(UpdatePrescriberInputType):
+        pass
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        try:
+            if not user.has_perms(ClaimConfig.gql_mutation_update_claims_perms):
+                raise PermissionDenied(_("unauthorized"))
+            data['audit_user_id'] = user.id_for_audit
+            client_mutation_id = data.get("client_mutation_id")
+            prescriber = update_or_create_prescriber(data, user)
+            PrescriberMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, prescriber=prescriber)
+            return None
+        except Exception as exc:
+            logger.exception("prescriber.mutation.failed_to_update_prescriber")
+            return [{
+                'message': _("prescriber.mutation.failed_to_update_prescriber"),
+                'detail': str(exc)
+            }]
+
+class DeletePrescribersMutation(OpenIMISMutation):
+    _mutation_module = "prescriber"
+    _mutation_class = "DeletePrescribersMutation"
+
+    class Input(OpenIMISMutation.Input):
+        uuids = graphene.List(graphene.String)
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        if not user.has_perms(ClaimConfig.gql_mutation_delete_claims_perms):
+            raise PermissionDenied(_("unauthorized"))
+        errors = []
+        for uuid in data["uuids"]:
+            prescriber = Prescriber.objects.filter(uuid=uuid).first()
+            if not prescriber:
+                errors.append({
+                    'title': uuid,
+                    'list': [{'message': _("prescriber.validation.not_found")}]
+                })
+                continue
+            errors += PrescriberService(user).set_deleted(prescriber)
+        return errors
+
+
+
+class SpecialityInputType(OpenIMISMutation.Input):
+    id = graphene.Int(required=False, read_only=True)
+    uuid = graphene.String(required=False)
+    code = graphene.String(max_length=50, required=False)
+    speciality = graphene.String(max_length=150, required=True)
+    alt_language = graphene.String(max_length=150, required=False)
+    json_ext = graphene.types.json.JSONString(required=False)
+
+
+class CreateSpecialityInputType(SpecialityInputType):
+    pass
+
+class UpdateSpecialityInputType(SpecialityInputType):
+    pass
+
+def update_or_create_speciality(data, user):
+    data.pop('client_mutation_id', None)
+    data.pop('client_mutation_label', None)
+    return SpecialityService(user).create_or_update(data)
+
+class CreateSpecialityMutation(OpenIMISMutation):
+    _mutation_module = "speciality"
+    _mutation_class = "CreateSpecialityMutation"
+
+    class Input(CreateSpecialityInputType):
+        pass
+
+    
+    @classmethod
+    def async_mutate(cls, user, **data):
+        try:
+            if not user.has_perms(ClaimConfig.gql_mutation_create_claims_perms):
+                raise PermissionDenied(_("unauthorized"))
+            data['audit_user_id'] = user.id_for_audit
+            client_mutation_id = data.get("client_mutation_id")
+            speciality = update_or_create_speciality(data, user)
+            SpecialityMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, speciality=speciality)
+            return None
+        except Exception as exc:
+            logger.exception("speciality.mutation.failed_to_create_speciality")
+            return [{
+                'message': _("speciality.mutation.failed_to_create_speciality"),
+                'detail': str(exc)
+            }]
+
+class UpdateSpecialityMutation(OpenIMISMutation):
+    _mutation_module = "speciality"
+    _mutation_class = "UpdateSpecialityMutation"
+
+    class Input(UpdateSpecialityInputType):
+        pass
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        try:
+            if not user.has_perms(ClaimConfig.gql_mutation_update_claims_perms):
+                raise PermissionDenied(_("unauthorized"))
+            if 'uuid' not in data:
+                raise ValidationError("uuid is required for update")
+            data['audit_user_id'] = user.id_for_audit
+            client_mutation_id = data.get("client_mutation_id")
+            speciality = update_or_create_speciality(data, user)
+            SpecialityMutation.object_mutated(
+                user, client_mutation_id=client_mutation_id, speciality=speciality)
+            return None
+        except Exception as exc:
+            logger.exception("speciality.mutation.failed_to_update_speciality")
+            return [{
+                'message': _("speciality.mutation.failed_to_update_speciality"),
+                'detail': str(exc)
+            }]
+
+class DeleteSpecialitiesMutation(OpenIMISMutation):
+    _mutation_module = "speciality"
+    _mutation_class = "DeleteSpecialitiesMutation"
+
+    class Input(OpenIMISMutation.Input):
+        uuids = graphene.List(graphene.String)
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        if not user.has_perms(ClaimConfig.gql_mutation_delete_claims_perms):
+            raise PermissionDenied(_("unauthorized"))
+        errors = []
+        for uuid in data["uuids"]:
+            speciality = Speciality.objects.filter(uuid=uuid).first()
+            if not speciality:
+                errors.append({
+                    'title': uuid,
+                    'list': [{'message': _("speciality.validation.not_found")}]
+                })
+                continue
+            errors += SpecialityService(user).set_deleted(speciality)
+        return errors
