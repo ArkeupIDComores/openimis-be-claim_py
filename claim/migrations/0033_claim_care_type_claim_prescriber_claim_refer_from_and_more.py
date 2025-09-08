@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('location', '0022_alter_location_code'),
         ('claim', '0032_prescriber_speciality_status_claim_care_type_and_more'),
     ]
 
