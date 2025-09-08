@@ -12,7 +12,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('core', '0028_alter_moduleconfiguration_module'),
-        ('location', '0022_alter_location_code'),
         ('claim', '0031_auto_20250419_1400'),
     ]
 
