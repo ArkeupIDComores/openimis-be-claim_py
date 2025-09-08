@@ -309,7 +309,7 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
         blank=True, null=True)
             
     prescriber = models.ForeignKey(
-        Prescriber, models.DO_NOTHING, db_column='PrescriberID')
+        Prescriber, models.DO_NOTHING, db_column='PrescriberID',null=True,blank=True)
     
     visit_type = models.CharField(
         db_column='VisitType', max_length=1, blank=True, null=True)
