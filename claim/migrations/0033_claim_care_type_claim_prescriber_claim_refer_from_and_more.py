@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='claim',
             name='prescriber',
-            field=models.ForeignKey(db_column='PrescriberID', on_delete=django.db.models.deletion.DO_NOTHING, to='claim.prescriber'),
+            field=models.ForeignKey(null=True,blank=True,db_column='PrescriberID', on_delete=django.db.models.deletion.DO_NOTHING, to='claim.prescriber'),
         )
     ]
