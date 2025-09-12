@@ -57,7 +57,7 @@ class PrescriberGQLType(DjangoObjectType):
             "nin": ["exact", "istartswith","icontains"],
             "last_name": ["exact", "icontains"],
             "other_names": ["exact", "icontains"],
-            "phone": ["exact","icontains"],
+            "phone": ["exact","icontains","istartswith"],
             "entry_date": ["exact", "lt", "lte", "gt", "gte"],
             "release_date": ["exact", "lt", "lte", "gt", "gte"],
             **prefix_filterset("main_health_facility__", HealthFacilityGQLType._meta.filter_fields),
