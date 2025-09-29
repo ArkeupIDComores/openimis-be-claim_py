@@ -231,3 +231,7 @@ msgstr "Claim needs to be rejected to be restored"
 
 msgid "mutation.restored_from_does_not_exist"
 msgstr "The claim you want to restore does not exist"
+
+#, fuzzy
+msgid "mutation.service_explanation_required"
+msgstr "Service explanation required"
