@@ -11,6 +11,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            sql='UPDATE "tblClaim" SET "PrescriberID" = NULL;',
+            reverse_sql=migrations.RunSQL.noop,
+        ),
+        migrations.RunSQL(
+            sql='DELETE FROM "tblPrescriber";',
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.AlterField(
             model_name='prescriber',
             name='code',
