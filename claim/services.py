@@ -758,6 +758,14 @@ class PrescriberService:
     def __init__(self, user):
         self.user = user
 
+    @staticmethod
+    def check_unique_prescriber_code(code):
+        if Prescriber.objects.filter(code=code).exists():
+            return [{"message": "Prescriber code %s already exists" % code}]
+        return []
+
+
+
     @register_service_signal('prescriber_service.create_or_update')
     def create_or_update(self, data):
         from core import datetime
@@ -828,6 +836,13 @@ class PrescriberService:
 class SpecialityService:
     def __init__(self, user):
         self.user = user
+    
+    @staticmethod
+    def check_unique_speciality_code(code):
+        if Speciality.objects.filter(code=code).exists():
+            return [{"message": "Speciality code %s already exists" % code}]
+        return []
+
 
     @register_service_signal('speciality_service.create_or_update')
     def create_or_update(self, data):
