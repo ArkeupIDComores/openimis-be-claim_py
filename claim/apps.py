@@ -4,6 +4,7 @@ MODULE_NAME = "claim"
 
 DEFAULT_CFG = {
     "default_validations_disabled": False,
+    "gql_query_admin_openimis_perms": ["121701"],
     "gql_query_claims_perms": ["111001"],
     "gql_query_claim_admins_perms": [],
     "gql_query_claim_officers_perms": [],
@@ -46,6 +47,7 @@ class ClaimConfig(AppConfig):
     gql_query_claim_officers_perms = []
     gql_query_claim_diagnosis_variance_only_on_existing: None
     gql_mutation_create_claims_perms = []
+    gql_query_admin_openimis_perms=[]
     gql_mutation_update_claims_perms = []
     gql_mutation_load_claims_perms = []
     gql_mutation_submit_claims_perms = []
