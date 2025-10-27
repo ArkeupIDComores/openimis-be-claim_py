@@ -760,7 +760,7 @@ class PrescriberService:
 
     @staticmethod
     def check_unique_prescriber_code(code):
-        if Prescriber.objects.filter(code=code, validity_to__isnull=True).exists():
+        if Prescriber.objects.filter(code=code).exists():
             return [{"message": "Prescriber code %s already exists" % code}]
         return []
 
@@ -839,7 +839,7 @@ class SpecialityService:
     
     @staticmethod
     def check_unique_speciality_code(code):
-        if Speciality.objects.filter(code=code, validity_to__isnull=True).exists():
+        if Speciality.objects.filter(code=code).exists():
             return [{"message": "Speciality code %s already exists" % code}]
         return []
 
