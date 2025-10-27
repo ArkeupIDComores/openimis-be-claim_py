@@ -99,6 +99,27 @@ class Query(graphene.ObjectType):
     
     statusOptions = graphene.List(StatusGQLType)
 
+    validate_speciality_code = graphene.Field(
+        graphene.Boolean,
+        speciality_code=graphene.String(required=True),
+        description="Checks that the specified speciality code is unique."
+    )
+
+    def resolve_validate_speciality_code(self, info, **kwargs):
+        errors = SpecialityService.check_unique_speciality_code(code=kwargs['speciality_code'])
+        return False if errors else True
+
+    validate_prescriber_code = graphene.Field(
+        graphene.Boolean,
+        prescriber_code=graphene.String(required=True),
+        description="Checks that the specified prescriber code is unique."
+    )
+
+    def resolve_validate_prescriber_code(self, info, **kwargs):
+        errors = PrescriberService.check_unique_prescriber_code(code=kwargs['prescriber_code'])
+        return False if errors else True
+
+
     def resolve_prescribers(self, info, **kwargs):
         if not info.context.user.has_perms(ClaimConfig.gql_query_claims_perms):
             raise PermissionDenied(_("unauthorized"))
