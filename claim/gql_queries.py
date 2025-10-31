@@ -157,6 +157,7 @@ class ClaimGQLType(DjangoObjectType):
             "visit_type": ["exact"],
             "attachments_count__value": ["exact", "lt", "lte", "gt", "gte"],
             "pre_authorization": ["exact"],
+            "is_pre_authorization": ["exact"],
             **prefix_filterset("icd__", DiagnosisGQLType._meta.filter_fields),
             **prefix_filterset("admin__", ClaimAdminGQLType._meta.filter_fields),
             **prefix_filterset("health_facility__", HealthFacilityGQLType._meta.filter_fields),
