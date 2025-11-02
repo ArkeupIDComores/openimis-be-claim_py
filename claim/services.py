@@ -306,10 +306,10 @@ class ClaimReportService(object):
             "insuree": str(claim.insuree),
             "claimAdmin": str(claim.admin) if claim.admin else None,
             "icd": str(claim.icd),
-            "icd1": str(claim.icd1) if claim.icd_1 else None,
-            "icd2": str(claim.icd1) if claim.icd_2 else None,
-            "icd3": str(claim.icd1) if claim.icd_3 else None,
-            "icd4": str(claim.icd1) if claim.icd_4 else None,
+            "icd1": str(claim.icd_1) if claim.icd_1 else None,
+            "icd2": str(claim.icd_2) if claim.icd_2 else None,
+            "icd3": str(claim.icd_3) if claim.icd_3 else None,
+            "icd4": str(claim.icd_4) if claim.icd_4 else None,
             "guarantee": claim.guarantee_id,
             "visitType": claim.visit_type,
             "claimed": claim.claimed,
@@ -399,6 +399,11 @@ def check_unique_claim_code(code):
         return [{"message": "Claim code %s already exists" % code}]
     return []
 
+def check_unique_claim_pre_authorization_code(code_pre_authorization):
+    if Claim.objects.filter(code_pre_authorization=code_pre_authorization, validity_to__isnull=True).exists():
+        return [{"message": "Claim code_pre_authorization %s already exists" % code_pre_authorization}]
+    return []
+
 
 def reset_claim_before_update(claim):
     claim.date_to = None
@@ -432,6 +437,16 @@ def _get_autogenerating_func() -> Callable[[Dict], Callable]:
 
 
 def claim_create(data, user, autogenerate_code = False):
+    code_pre_authorization=data.get("code_pre_authorization")
+    if code_pre_authorization!=None:
+        from core import datetime
+        now = datetime.datetime.now()
+        date_pre_authorization=now
+        data["date_pre_authorization"]=date_pre_authorization
+    code=data.get("code")
+    if code==None and code_pre_authorization==None:
+        raise ValidationError(_("mutation.claim_is_missing_code"))
+   
     prescriber_uuid = data.pop("prescriber_uuid", None)
     if prescriber_uuid:
         prescriber = Prescriber.objects.filter(uuid=prescriber_uuid).first()
@@ -512,6 +527,7 @@ def update_or_create_claim(data, user):
 def validate_claim_data(data, user):
     services = data.get('services') if 'services' in data else []
     incoming_code = data.get('code')
+    incoming_code_pre_authorization = data.get('code_pre_authorization')
     claim_uuid = data.get("uuid", None)
     restore = data.get('restore', None)
     current_claim = Claim.objects.filter(uuid=claim_uuid).first()
@@ -543,7 +559,10 @@ def validate_claim_data(data, user):
             if service["qty_provided"] > 1 and not service.get("explanation"):
                 raise ValidationError(_("mutation.service_explanation_required"))
 
-    if len(incoming_code) > ClaimConfig.max_claim_length:
+    if incoming_code!=None and len(incoming_code) > ClaimConfig.max_claim_length:
+        raise ValidationError(_("mutation.code_name_too_long"))
+    
+    if incoming_code_pre_authorization!=None and len(incoming_code_pre_authorization) > ClaimConfig.max_claim_length:
         raise ValidationError(_("mutation.code_name_too_long"))
 
     if not restore and current_code != incoming_code and check_unique_claim_code(incoming_code):

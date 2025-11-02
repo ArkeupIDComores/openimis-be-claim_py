@@ -41,6 +41,8 @@ from claim.services import PrescriberService, SpecialityService,validate_claim_d
 from django.db import transaction
 import requests
 
+REJECTION_REASON_CLAIM_HAS_NO_CODE = 22
+
 logger = logging.getLogger(__name__)
 
 
@@ -231,10 +233,10 @@ class AttachmentInputType(Attachment, OpenIMISMutation.Input):
 class ClaimInputType(OpenIMISMutation.Input):
     id = graphene.Int(required=False, read_only=True)
     uuid = graphene.String(required=False)
-    code = ClaimCodeInputType(required=True)
+    code = ClaimCodeInputType(required=False)
     autogenerate = graphene.Boolean(required=False)
     insuree_id = graphene.Int(required=True)
-    date_from = graphene.Date(required=True)
+    date_from = graphene.Date(required=False)
     date_to = graphene.Date(required=False)
     icd_id = graphene.Int(required=True)
     icd_1_id = graphene.Int(required=False)
@@ -242,7 +244,7 @@ class ClaimInputType(OpenIMISMutation.Input):
     icd_3_id = graphene.Int(required=False)
     icd_4_id = graphene.Int(required=False)
     review_status = TinyInt(required=False)
-    date_claimed = graphene.Date(required=True)
+    date_claimed = graphene.Date(required=False)
     date_processed = graphene.Date(required=False)
     health_facility_id = graphene.Int(required=True)
     refer_from_id = graphene.Int(required=False)
@@ -265,6 +267,7 @@ class ClaimInputType(OpenIMISMutation.Input):
     patient_condition = graphene.String(required=False)
     referral_code = graphene.String(required=False)
     prescriber_uuid=graphene.String(required=True)
+    code_pre_authorization=graphene.String(required=False)
 
     items = graphene.List(ClaimItemInputType, required=False)
     services = graphene.List(ClaimServiceInputType, required=False)
@@ -361,6 +364,16 @@ class CreateClaimMutation(OpenIMISMutation):
             from core.utils import TimeUtils
             data['validity_from'] = TimeUtils.now()
             attachments = data.pop('attachments') if 'attachments' in data else None
+
+            is_pre_authorization = data.get("is_pre_authorization", False)
+            code_pre_authorization = data.get("code_pre_authorization", None)
+            if is_pre_authorization==False:
+                if data.get("code")==None or data.get("date_from")==None or data.get("date_claimed")==None:
+                     raise ValidationError(
+                    _("mutation.claims.missingfields"))
+            if is_pre_authorization==True and code_pre_authorization==None:
+                     raise ValidationError(
+                    _("mutation.claims.missingfields"))
             
             claim = update_or_create_claim(data, user)
             if attachments:
@@ -615,7 +628,14 @@ class SubmitClaimsMutation(OpenIMISMutation, ClaimSubmissionStatsMixin):
         remaining_uuid = list(map(str.upper,uuids))
         for claim in claims:
             remaining_uuid.remove(claim.uuid.upper())
-            c_errors += submit_claim(claim, user)
+            if claim.code==None:
+                c_errors+=  [{'code': REJECTION_REASON_CLAIM_HAS_NO_CODE,
+                    'message': _("claim.has-no-code") % {
+                        'code': claim.code_pre_authorization
+                    },
+                    'detail': claim.uuid}]
+            else:
+                c_errors += submit_claim(claim, user)
             if c_errors:
                 errors.append({
                     'title': claim.code,

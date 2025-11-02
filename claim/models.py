@@ -219,7 +219,7 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
     insuree = models.ForeignKey(
         insuree_models.Insuree, models.DO_NOTHING, db_column='InsureeID')
     # do not change max_length value - use setting from apps.py
-    code = models.CharField(db_column='ClaimCode', max_length=50)
+    code = models.CharField(db_column='ClaimCode', max_length=50, null=True, blank=True)
     date_from = fields.DateField(db_column='DateFrom')
     date_to = fields.DateField(db_column='DateTo', blank=True, null=True)
     status = models.SmallIntegerField(db_column='ClaimStatus')
@@ -326,6 +326,10 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
     referral_code = models.CharField(max_length=50, null=True, blank=True)
 
     # row_id = models.BinaryField(db_column='RowID', blank=True, null=True)
+
+    code_pre_authorization=models.CharField(db_column='ClaimPreAuthorizationCode', max_length=50, null=True, blank=True)
+    date_pre_authorization=fields.DateTimeField(
+        db_column='DatePreAuthorization', blank=True, null=True)
 
     class Meta:
         managed = True
