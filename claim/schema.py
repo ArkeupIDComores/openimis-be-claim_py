@@ -358,6 +358,7 @@ class Mutation(graphene.ObjectType):
     update_claim_attachment = UpdateAttachmentMutation.Field()
     delete_claim_attachment = DeleteAttachmentMutation.Field()
     submit_claims = SubmitClaimsMutation.Field()
+    submit_claims_pre_authorization=SubmitClaimsPreAuthorizationMutation.Field()
     select_claims_for_feedback = SelectClaimsForFeedbackMutation.Field()
     deliver_claim_feedback = DeliverClaimFeedbackMutation.Field()
     bypass_claims_feedback = BypassClaimsFeedbackMutation.Field()
