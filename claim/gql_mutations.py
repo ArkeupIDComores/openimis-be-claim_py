@@ -759,6 +759,99 @@ class SubmitClaimsPreAuthorizationMutation(OpenIMISMutation, ClaimSubmissionStat
         return errors
 
 
+class submitClaimsToMedicalMutation(OpenIMISMutation):
+    """
+    Submit one claim to medical officer.
+    
+    """
+
+    _mutation_module = "claim"
+    _mutation_class = "submitClaimsToMedicalMutation"
+
+    class Input(OpenIMISMutation.Input):
+        uuid = graphene.String(required=True)
+
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        # if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
+        #     raise PermissionDenied(_("unauthorized"))
+        errors = []
+        uuid = data.get("uuid", None)
+        client_mutation_id = data.get("client_mutation_id", None)
+        claim = Claim.objects.filter(uuid=uuid,validity_to__isnull=True).first() 
+        claim.save_history()
+        claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_SUBMITED_TO_DOCTOR
+        claim.save()
+        print(claim.status_pre_authorization)
+        
+        return errors
+
+
+class submitToNormalClaimMutation(OpenIMISMutation):
+    """
+    Submit one claim to medical officer.
+    
+    """
+
+    _mutation_module = "claim"
+    _mutation_class = "submitToNormalClaimMutation"
+
+    class Input(OpenIMISMutation.Input):
+        uuid = graphene.String(required=True)
+
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        # if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
+        #     raise PermissionDenied(_("unauthorized"))
+        errors = []
+        uuid = data.get("uuid", None)
+        client_mutation_id = data.get("client_mutation_id", None)
+        claim = Claim.objects.filter(uuid=uuid,validity_to__isnull=True).first() 
+        claim.save_history()
+        claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_VALIDATED
+        claim.save()
+        print(claim.status_pre_authorization)
+        return errors
+
+
+class rejectClaimPreAuthorizationMutation(OpenIMISMutation):
+    """
+    Submit one claim to medical officer.
+    
+    """
+
+    _mutation_module = "claim"
+    _mutation_class = "rejectClaimPreAuthorizationMutation"
+
+    class Input(OpenIMISMutation.Input):
+        uuid = graphene.String(required=True)
+        reason = graphene.String(required=True)
+
+
+    @classmethod
+    def async_mutate(cls, user, **data):
+        # if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
+        #     raise PermissionDenied(_("unauthorized"))
+        errors = []
+        uuid = data.get("uuid", None)
+        reason = data.get("reason", None)
+        print(uuid)
+        print(reason)
+        client_mutation_id = data.get("client_mutation_id", None)
+        claim = Claim.objects.filter(uuid=uuid,validity_to__isnull=True).first() 
+        # claim.save_history()
+        claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_REJECTED
+        claim.rejection_pre_authorization_reason=reason
+        # claim.save()
+        print(claim.status_pre_authorization)
+        return errors
+
+
+
+
+
 
 def create_feedback_prompt(claim_uuid, user):
     current_claim = Claim.objects.get(uuid=claim_uuid)
