@@ -841,10 +841,10 @@ class rejectClaimPreAuthorizationMutation(OpenIMISMutation):
         print(reason)
         client_mutation_id = data.get("client_mutation_id", None)
         claim = Claim.objects.filter(uuid=uuid,validity_to__isnull=True).first() 
-        # claim.save_history()
+        claim.save_history()
         claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_REJECTED
         claim.rejection_pre_authorization_reason=reason
-        # claim.save()
+        claim.save()
         print(claim.status_pre_authorization)
         return errors
 
