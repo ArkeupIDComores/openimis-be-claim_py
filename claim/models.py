@@ -219,7 +219,7 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
     insuree = models.ForeignKey(
         insuree_models.Insuree, models.DO_NOTHING, db_column='InsureeID')
     # do not change max_length value - use setting from apps.py
-    code = models.CharField(db_column='ClaimCode', max_length=50)
+    code = models.CharField(db_column='ClaimCode', max_length=50, null=True, blank=True)
     date_from = fields.DateField(db_column='DateFrom')
     date_to = fields.DateField(db_column='DateTo', blank=True, null=True)
     status = models.SmallIntegerField(db_column='ClaimStatus')
@@ -327,6 +327,12 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
 
     # row_id = models.BinaryField(db_column='RowID', blank=True, null=True)
 
+    code_pre_authorization=models.CharField(db_column='ClaimPreAuthorizationCode', max_length=50, null=True, blank=True)
+    date_pre_authorization=fields.DateTimeField(
+        db_column='DatePreAuthorization', blank=True, null=True)
+    status_pre_authorization=models.SmallIntegerField(db_column='ClaimPreAuthorizationStatus',blank=True,null=True)
+    rejection_pre_authorization_reason=models.TextField(db_column='rejectionPreAuthorizationReason',blank=True,null=True)
+
     class Meta:
         managed = True
         db_table = 'tblClaim'
@@ -348,6 +354,12 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
     REVIEW_SELECTED = 4
     REVIEW_DELIVERED = 8
     REVIEW_BYPASSED = 16
+
+    STATUS_PRE_AUTHORIZATION_REJECTED=1
+    STATUS_PRE_AUTHORIZATION_ENTERED=2
+    STATUS_PRE_AUTHORIZATION_SUBMITED_TO_ADMIN=4
+    STATUS_PRE_AUTHORIZATION_SUBMITED_TO_DOCTOR=8
+    STATUS_PRE_AUTHORIZATION_VALIDATED=16
 
     def reject(self, rejection_code):
         updated_items = self.items.filter(validity_to__isnull=True).update(
