@@ -809,7 +809,9 @@ class submitToNormalClaimMutation(OpenIMISMutation):
         uuid = data.get("uuid", None)
         client_mutation_id = data.get("client_mutation_id", None)
         claim = Claim.objects.filter(uuid=uuid,validity_to__isnull=True).first() 
+        
         claim.save_history()
+        claim.audit_user_id_pre_auth = user.id_for_audit
         claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_VALIDATED
         claim.save()
         print(claim.status_pre_authorization)
@@ -842,6 +844,7 @@ class rejectClaimPreAuthorizationMutation(OpenIMISMutation):
         client_mutation_id = data.get("client_mutation_id", None)
         claim = Claim.objects.filter(uuid=uuid,validity_to__isnull=True).first() 
         claim.save_history()
+        claim.audit_user_id_pre_auth = user.id_for_audit
         claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_REJECTED
         claim.rejection_pre_authorization_reason=reason
         claim.save()
