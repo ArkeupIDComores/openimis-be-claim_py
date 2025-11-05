@@ -36,7 +36,8 @@ class Query(graphene.ObjectType):
         json_ext=graphene.JSONString(),
         attachment_status=graphene.Int(required=False),
         care_type=graphene.String(required=False),
-        show_restored=graphene.Boolean(required=False)
+        show_restored=graphene.Boolean(required=False),
+        is_normal_claim=graphene.Boolean(required=False)
         )
 
     claim = graphene.Field(
@@ -260,6 +261,13 @@ class Query(graphene.ObjectType):
         #        )
         code_is_not = kwargs.get("code_is_not", None)
         
+        is_normal_claim = kwargs.get("is_normal_claim", None)
+        if is_normal_claim:
+            filters.append(
+                Q(is_pre_authorization=False) |
+                (Q(is_pre_authorization=True) & Q(status_pre_authorization=16))
+            )
+
         if len(filters):
             query = query.filter(*filters)   
         if code_is_not:
