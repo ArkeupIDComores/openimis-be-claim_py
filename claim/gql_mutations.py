@@ -1073,7 +1073,7 @@ class CreatePrescriberMutation(OpenIMISMutation):
     @classmethod
     def async_mutate(cls, user, **data):
         try:
-            if not user.has_perms(ClaimConfig.gql_mutation_create_claims_perms):
+            if not user.has_perms(ClaimConfig.gql_query_admin_openimis_perms):
                 raise PermissionDenied(_("unauthorized"))
             data['audit_user_id'] = user.id_for_audit
             client_mutation_id = data.get("client_mutation_id")
@@ -1098,7 +1098,7 @@ class UpdatePrescriberMutation(OpenIMISMutation):
     @classmethod
     def async_mutate(cls, user, **data):
         try:
-            if not user.has_perms(ClaimConfig.gql_mutation_update_claims_perms):
+            if not user.has_perms(ClaimConfig.gql_query_admin_openimis_perms):
                 raise PermissionDenied(_("unauthorized"))
             data['audit_user_id'] = user.id_for_audit
             client_mutation_id = data.get("client_mutation_id")
@@ -1122,7 +1122,7 @@ class DeletePrescribersMutation(OpenIMISMutation):
 
     @classmethod
     def async_mutate(cls, user, **data):
-        if not user.has_perms(ClaimConfig.gql_mutation_delete_claims_perms):
+        if not user.has_perms(ClaimConfig.gql_query_admin_openimis_perms):
             raise PermissionDenied(_("unauthorized"))
         errors = []
         for uuid in data["uuids"]:
@@ -1169,7 +1169,7 @@ class CreateSpecialityMutation(OpenIMISMutation):
     @classmethod
     def async_mutate(cls, user, **data):
         try:
-            if not user.has_perms(ClaimConfig.gql_mutation_create_claims_perms):
+            if not user.has_perms(ClaimConfig.gql_query_admin_openimis_perms):
                 raise PermissionDenied(_("unauthorized"))
             data['audit_user_id'] = user.id_for_audit
             client_mutation_id = data.get("client_mutation_id")
@@ -1194,7 +1194,7 @@ class UpdateSpecialityMutation(OpenIMISMutation):
     @classmethod
     def async_mutate(cls, user, **data):
         try:
-            if not user.has_perms(ClaimConfig.gql_mutation_update_claims_perms):
+            if not user.has_perms(ClaimConfig.gql_query_admin_openimis_perms):
                 raise PermissionDenied(_("unauthorized"))
             if 'uuid' not in data:
                 raise ValidationError("uuid is required for update")
@@ -1220,7 +1220,7 @@ class DeleteSpecialitiesMutation(OpenIMISMutation):
 
     @classmethod
     def async_mutate(cls, user, **data):
-        if not user.has_perms(ClaimConfig.gql_mutation_delete_claims_perms):
+        if not user.has_perms(ClaimConfig.gql_query_admin_openimis_perms):
             raise PermissionDenied(_("unauthorized"))
         errors = []
         for uuid in data["uuids"]:
