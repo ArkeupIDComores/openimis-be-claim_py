@@ -4,7 +4,7 @@ from core.models import Role, RoleRight
 from core.utils import insert_role_right_for_system
 
 MEDICAL_OFFICER_ID = 16
-HF_ADMIN_ID = 524288
+CLAIM_ADMIN = 256
 
 CLAIM_VALIDATE_ADMIN_HF_PRE_AUTH_PERMS = ["111015"]
 CLAIM_VALIDATE_MEDICAL_PRE_AUTH_PERMS = ["111016"]
@@ -28,16 +28,16 @@ def _remove_rights_from_role(role,rightArray):
 
 def on_migration(apps, schema_editor):
     _add_rights_to_role(MEDICAL_OFFICER_ID,CLAIM_VALIDATE_MEDICAL_PRE_AUTH_PERMS)
-    _add_rights_to_role(HF_ADMIN_ID,CLAIM_VALIDATE_ADMIN_HF_PRE_AUTH_PERMS)
+    _add_rights_to_role(CLAIM_ADMIN,CLAIM_VALIDATE_ADMIN_HF_PRE_AUTH_PERMS)
     _add_rights_to_role(MEDICAL_OFFICER_ID,CLAIM_REJECT_PRE_AUTH_PERMS)
-    _add_rights_to_role(HF_ADMIN_ID,CLAIM_REJECT_PRE_AUTH_PERMS)
+    _add_rights_to_role(CLAIM_ADMIN,CLAIM_REJECT_PRE_AUTH_PERMS)
 
 
 def on_migration_reverse(apps, schema_editor):
     _remove_rights_from_role(MEDICAL_OFFICER_ID,CLAIM_VALIDATE_MEDICAL_PRE_AUTH_PERMS)
-    _remove_rights_from_role(HF_ADMIN_ID,CLAIM_VALIDATE_ADMIN_HF_PRE_AUTH_PERMS)
+    _remove_rights_from_role(CLAIM_ADMIN,CLAIM_VALIDATE_ADMIN_HF_PRE_AUTH_PERMS)
     _remove_rights_from_role(MEDICAL_OFFICER_ID,CLAIM_REJECT_PRE_AUTH_PERMS)
-    _remove_rights_from_role(HF_ADMIN_ID,CLAIM_REJECT_PRE_AUTH_PERMS)
+    _remove_rights_from_role(CLAIM_ADMIN,CLAIM_REJECT_PRE_AUTH_PERMS)
 
 
 class Migration(migrations.Migration):
