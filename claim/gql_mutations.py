@@ -42,6 +42,7 @@ from django.db import transaction
 import requests
 
 REJECTION_REASON_CLAIM_HAS_NO_CODE = 22
+VISIT_TYPE_EMERGENCY="E"
 
 logger = logging.getLogger(__name__)
 
@@ -383,7 +384,9 @@ class CreateClaimMutation(OpenIMISMutation):
                      raise ValidationError(
                     _("mutation.claims.missingfields.code_pre_authorization"))
             if is_pre_authorization==True:
-                if data.get("date_pre_authorization_emergency")==None and data.get("visit_type")=="E" :
+                print("daty TAYYY")
+                print( data.get("date_pre_authorization_emergency"))
+                if data.get("date_pre_authorization_emergency")==None and data.get("visit_type")==VISIT_TYPE_EMERGENCY :
                     raise ValidationError(
                     _("mutation.claims.missingfields.date_emergency"))
                    
