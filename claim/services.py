@@ -563,7 +563,7 @@ def validate_claim_data(data, user):
                 raise ValidationError(_("mutation.service_explanation_required"))
 
     if incoming_code!=None and len(incoming_code) > ClaimConfig.max_claim_length:
-        raise ValidationError(_("mutation.code_name_too_long"))
+        raise ValidationError(_("mutation.code_pre_auth_name_too_long"))
     
     if incoming_code_pre_authorization!=None and len(incoming_code_pre_authorization) > ClaimConfig.max_claim_length:
         raise ValidationError(_("mutation.code_name_too_long"))

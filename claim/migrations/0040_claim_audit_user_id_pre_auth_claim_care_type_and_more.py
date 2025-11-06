@@ -16,4 +16,10 @@ class Migration(migrations.Migration):
             name='audit_user_id_pre_auth',
             field=models.IntegerField(blank=True, db_column='AuditUserIDPreAuth', null=True),
         ),
+        migrations.AddField(
+            model_name='claim',
+            name='date_pre_authorization_decision',
+            field=models.IntegerField(blank=True, db_column='DatePreAuthorizationDecision', null=True),
+        ),
+    
     ]
