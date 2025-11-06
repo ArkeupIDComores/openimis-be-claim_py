@@ -774,8 +774,8 @@ class submitClaimsToMedicalMutation(OpenIMISMutation):
 
     @classmethod
     def async_mutate(cls, user, **data):
-        # if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
-        #     raise PermissionDenied(_("unauthorized"))
+        if not user.has_perms(ClaimConfig.gql_validate_admin_HF_pre_auth_perms):
+            raise PermissionDenied(_("unauthorized"))
         errors = []
         uuid = data.get("uuid", None)
         client_mutation_id = data.get("client_mutation_id", None)
@@ -803,8 +803,8 @@ class submitToNormalClaimMutation(OpenIMISMutation):
 
     @classmethod
     def async_mutate(cls, user, **data):
-        # if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
-        #     raise PermissionDenied(_("unauthorized"))
+        if not user.has_perms(ClaimConfig.gql_validate_medical_pre_auth_perms):
+            raise PermissionDenied(_("unauthorized"))
         errors = []
         uuid = data.get("uuid", None)
         client_mutation_id = data.get("client_mutation_id", None)
@@ -834,8 +834,8 @@ class rejectClaimPreAuthorizationMutation(OpenIMISMutation):
 
     @classmethod
     def async_mutate(cls, user, **data):
-        # if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
-        #     raise PermissionDenied(_("unauthorized"))
+        if not user.has_perms(ClaimConfig.gql_reject_pre_auth_perms):
+            raise PermissionDenied(_("unauthorized"))
         errors = []
         uuid = data.get("uuid", None)
         reason = data.get("reason", None)

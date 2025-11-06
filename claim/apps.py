@@ -65,6 +65,9 @@ class ClaimConfig(AppConfig):
     gql_mutation_process_claims_perms = []
     gql_mutation_restore_claims_perms = []
     gql_mutation_delete_claims_perms = []
+    gql_validate_admin_HF_pre_auth_perms=[]
+    gql_validate_medical_pre_auth_perms=[]
+    gql_reject_pre_auth_perms=[]
     claim_print_perms = []
     claim_attachments_root_path = None
     claim_uspUpdateClaimFromPhone_intermediate_sets = None
