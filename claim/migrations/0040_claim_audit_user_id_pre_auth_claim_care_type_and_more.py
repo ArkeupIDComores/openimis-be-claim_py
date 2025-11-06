@@ -21,5 +21,10 @@ class Migration(migrations.Migration):
             name='date_pre_authorization_decision',
             field=models.IntegerField(blank=True, db_column='DatePreAuthorizationDecision', null=True),
         ),
+        migrations.AddField(
+            model_name='claim',
+            name='date_pre_authorization_emergency',
+            field=models.IntegerField(blank=True, db_column='DatePreAuthorizationEmergency', null=True),
+        ),
     
     ]

@@ -334,6 +334,8 @@ class Claim(core_models.VersionedModel, core_models.ExtendableModel):
         db_column='DatePreAuthorization', blank=True, null=True)
     date_pre_authorization_decision=fields.DateTimeField(
         db_column='DatePreAuthorizationDecision', blank=True, null=True)
+    date_pre_authorization_emergency=fields.DateTimeField(
+        db_column='DatePreAuthorizationEmergency', blank=True, null=True)
     status_pre_authorization=models.SmallIntegerField(db_column='ClaimPreAuthorizationStatus',blank=True,null=True)
     rejection_pre_authorization_reason=models.TextField(db_column='rejectionPreAuthorizationReason',blank=True,null=True)
 

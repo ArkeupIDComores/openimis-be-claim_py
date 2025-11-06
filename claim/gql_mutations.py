@@ -268,6 +268,7 @@ class ClaimInputType(OpenIMISMutation.Input):
     referral_code = graphene.String(required=False)
     prescriber_uuid=graphene.String(required=True)
     code_pre_authorization=graphene.String(required=False)
+    date_pre_authorization_emergency=graphene.DateTime(required=False)
 
     items = graphene.List(ClaimItemInputType, required=False)
     services = graphene.List(ClaimServiceInputType, required=False)
@@ -381,6 +382,10 @@ class CreateClaimMutation(OpenIMISMutation):
             if is_pre_authorization==True and code_pre_authorization==None:
                      raise ValidationError(
                     _("mutation.claims.missingfields.code_pre_authorization"))
+            if is_pre_authorization==True:
+                if data.get("date_pre_authorization_emergency")==None and data.get("visit_type")=="E" :
+                    raise ValidationError(
+                    _("mutation.claims.missingfields.date_emergency"))
                    
             claim = update_or_create_claim(data, user)
             if attachments:
