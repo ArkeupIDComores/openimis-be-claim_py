@@ -42,6 +42,7 @@ from django.db import transaction
 import requests
 
 REJECTION_REASON_CLAIM_HAS_NO_CODE = 22
+VISIT_TYPE_EMERGENCY="E"
 
 logger = logging.getLogger(__name__)
 
@@ -268,6 +269,7 @@ class ClaimInputType(OpenIMISMutation.Input):
     referral_code = graphene.String(required=False)
     prescriber_uuid=graphene.String(required=True)
     code_pre_authorization=graphene.String(required=False)
+    date_pre_authorization_emergency=graphene.DateTime(required=False)
 
     items = graphene.List(ClaimItemInputType, required=False)
     services = graphene.List(ClaimServiceInputType, required=False)
@@ -368,12 +370,25 @@ class CreateClaimMutation(OpenIMISMutation):
             is_pre_authorization = data.get("is_pre_authorization", False)
             code_pre_authorization = data.get("code_pre_authorization", None)
             if is_pre_authorization==False:
-                if data.get("code")==None or data.get("date_from")==None or data.get("date_claimed")==None:
+                if data.get("code")==None :
                      raise ValidationError(
-                    _("mutation.claims.missingfields"))
+                    _("mutation.claims.missingfields.code"))
+                if  data.get("date_from")==None :
+                     raise ValidationError(
+                    _("mutation.claims.missingfields.dateForm"))
+                if  data.get("date_claimed")==None:
+                     raise ValidationError(
+                    _("mutation.claims.missingfields.dateClaimed"))
+                
             if is_pre_authorization==True and code_pre_authorization==None:
                      raise ValidationError(
-                    _("mutation.claims.missingfields"))
+                    _("mutation.claims.missingfields.code_pre_authorization"))
+            if is_pre_authorization==True:
+                print("daty TAYYY")
+                print( data.get("date_pre_authorization_emergency"))
+                if data.get("date_pre_authorization_emergency")==None and data.get("visit_type")==VISIT_TYPE_EMERGENCY :
+                    raise ValidationError(
+                    _("mutation.claims.missingfields.date_emergency"))
                    
             claim = update_or_create_claim(data, user)
             if attachments:
@@ -812,6 +827,9 @@ class submitToNormalClaimMutation(OpenIMISMutation):
         
         claim.save_history()
         claim.audit_user_id_pre_auth = user.id_for_audit
+        from core import datetime
+        now = datetime.datetime.now()
+        claim.date_pre_authorization_decision=now
         claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_VALIDATED
         claim.save()
         print(claim.status_pre_authorization)
@@ -845,6 +863,9 @@ class rejectClaimPreAuthorizationMutation(OpenIMISMutation):
         claim = Claim.objects.filter(uuid=uuid,validity_to__isnull=True).first() 
         claim.save_history()
         claim.audit_user_id_pre_auth = user.id_for_audit
+        from core import datetime
+        now = datetime.datetime.now()
+        claim.date_pre_authorization_decision=now
         claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_REJECTED
         claim.rejection_pre_authorization_reason=reason
         claim.save()
