@@ -7,6 +7,8 @@ import base64
 from urllib.parse import urlparse
 from typing import Callable, Dict
 
+from claim.notification_client import ClaimNotificationSender
+from claim.notification_templates import ClaimNotificationKeys
 import graphene
 import importlib
 import graphene_django_optimizer
@@ -384,8 +386,6 @@ class CreateClaimMutation(OpenIMISMutation):
                      raise ValidationError(
                     _("mutation.claims.missingfields.code_pre_authorization"))
             if is_pre_authorization==True:
-                print("daty TAYYY")
-                print( data.get("date_pre_authorization_emergency"))
                 if data.get("date_pre_authorization_emergency")==None and data.get("visit_type")==VISIT_TYPE_EMERGENCY :
                     raise ValidationError(
                     _("mutation.claims.missingfields.date_emergency"))
@@ -799,6 +799,9 @@ class submitClaimsToMedicalMutation(OpenIMISMutation):
         claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_SUBMITED_TO_DOCTOR
         claim.save()
         print(claim.status_pre_authorization)
+
+        #NotificationLogic
+        ClaimNotificationSender.send_preauthorization_notifications(claim, ClaimNotificationKeys.ON_ADMIN_FOSA_VALIDATION)
         
         return errors
 
@@ -833,6 +836,9 @@ class submitToNormalClaimMutation(OpenIMISMutation):
         claim.status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_VALIDATED
         claim.save()
         print(claim.status_pre_authorization)
+
+        #Notification logic
+        ClaimNotificationSender.send_preauthorization_notifications(claim,ClaimNotificationKeys.ON_APPROVED)
         return errors
 
 
@@ -870,17 +876,15 @@ class rejectClaimPreAuthorizationMutation(OpenIMISMutation):
         claim.rejection_pre_authorization_reason=reason
         claim.save()
         print(claim.status_pre_authorization)
+
+        #Notification logic
+        ClaimNotificationSender.send_preauthorization_notifications(claim,ClaimNotificationKeys.ON_REJECTED)
         return errors
-
-
-
-
 
 
 def create_feedback_prompt(claim_uuid, user):
     current_claim = Claim.objects.get(uuid=claim_uuid)
     return service_create_feedback_prompt(current_claim, user)
-    
 
 
 class SelectClaimsForFeedbackMutation(OpenIMISMutation):
