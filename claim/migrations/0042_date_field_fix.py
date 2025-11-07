@@ -5,11 +5,10 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('claim', '0040_claim_audit_user_id_pre_auth_claim_care_type_and_more'),
+        ('claim', '0041_role_medical_officer'),
     ]
 
     operations = [
-        # Supprimer les colonnes existantes
         migrations.RemoveField(
             model_name='claim',
             name='date_pre_authorization_emergency',
@@ -19,7 +18,6 @@ class Migration(migrations.Migration):
             name='date_pre_authorization_decision',
         ),
 
-        # Ajouter à nouveau les colonnes avec le bon type
         migrations.AddField(
             model_name='claim',
             name='date_pre_authorization_emergency',
@@ -32,7 +30,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='claim',
             name='date_pre_authorization_decision',
-            field=models.DateField(
+            field=models.DateTimeField(
                 blank=True,
                 null=True,
                 db_column='DatePreAuthorizationDecision'
