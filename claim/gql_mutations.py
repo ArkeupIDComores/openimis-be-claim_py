@@ -370,13 +370,13 @@ class CreateClaimMutation(OpenIMISMutation):
             is_pre_authorization = data.get("is_pre_authorization", False)
             code_pre_authorization = data.get("code_pre_authorization", None)
             if is_pre_authorization==False:
-                if data.get("code")==None :
+                if data.get("code")==None or data.get("code")=="" :
                      raise ValidationError(
                     _("mutation.claims.missingfields.code"))
-                if  data.get("date_from")==None :
+                if  data.get("date_from")==None or data.get("date_from")==""  :
                      raise ValidationError(
                     _("mutation.claims.missingfields.dateForm"))
-                if  data.get("date_claimed")==None:
+                if  data.get("date_claimed")==None or data.get("date_claimed")=="" :
                      raise ValidationError(
                     _("mutation.claims.missingfields.dateClaimed"))
                 
