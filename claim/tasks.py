@@ -5,7 +5,6 @@ import logging
 from claim.models import Claim
 from claim.notification_client import ClaimNotificationSender
 from claim.notification_templates import ClaimNotificationKeys
-from .app import ClaimConfig
 
 logger = logging.getLogger(__name__)
 

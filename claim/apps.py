@@ -38,7 +38,7 @@ DEFAULT_CFG = {
     "claim_max_restore": None,
     "allowed_domains_attachments": [],
     "verify_quantities": False,
-    "task_interval_hours": 4,
+    "task_interval_hours": 24,
     "task_first_call_hour": 8,
     "task_last_call_hour": 20
 }
