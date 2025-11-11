@@ -3,6 +3,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from claim.notification_templates import ClaimNotificationKeys, ClaimNotificationTemplates
 from core.models.user import UserRole, User, InteractiveUser, Role
+from django.db.models.query import QuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +38,11 @@ class ClaimNotificationClient:
 
     def get_context(self, preauth, key, user):
         # List logic
-        if isinstance(preauth, (list, tuple)):
+        if isinstance(preauth, (list, tuple, QuerySet)):
             codes = [getattr(p, "code_pre_authorization", "") for p in preauth if hasattr(p, "code_pre_authorization")]
             code_concat = ", ".join(filter(None, codes)) or "(aucun code)"
+            print("code_concat")
+            print(code_concat)
             return {
                 "code": code_concat,
                 "user_name": getattr(user, "username", "Utilisateur"),
@@ -131,7 +134,7 @@ class ClaimNotificationClient:
                 html_message=html_message,  # Version HTML
                 fail_silently=False,
             )
-            logger.info(f"Email sent successfully to {email} for claim {preauth.code}")
+            # logger.info(f"Email sent successfully to {email} for claim {preauth.code}")
             return {"success": True, "email": email}
         
         except Exception as e:
@@ -159,7 +162,7 @@ class ClaimNotificationSender:
     @classmethod
     def send_preauthorization_notifications(cls, preauth, key):
         """Point d'entrée principal pour envoyer les notifications"""
-        logger.info(f"Sending email notifications for claim {preauth.code} with key {key}")
+        # logger.info(f"Sending email notifications for claim {preauth.code} with key {key}")
         
         client = ClaimNotificationClient()
         results = client.send_preauthorization_notifications(preauth, key)
