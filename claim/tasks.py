@@ -16,8 +16,7 @@ def process_claim_task():
             status_pre_authorization=Claim.STATUS_PRE_AUTHORIZATION_SUBMITED_TO_DOCTOR
         )
 
-        for claim in claims:
-            ClaimNotificationSender.send_preauthorization_notifications(claim,ClaimNotificationKeys.ON_PENDING)
+        ClaimNotificationSender.send_preauthorization_notifications(claims,ClaimNotificationKeys.ON_PENDING)
     except Exception as e:
         import traceback
         traceback.print_exc()

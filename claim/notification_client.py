@@ -36,14 +36,25 @@ class ClaimNotificationClient:
         return []
 
     def get_context(self, preauth, key, user):
-        """Prépare le contexte pour le template d'email"""
-        context = {
-            "code": preauth.code_pre_authorization,
-            "user_name": user.username if hasattr(user, 'username') else "Utilisateur",
-            "claim_code": preauth.code,
-            "status": self.get_status_label(key)
+        # List logic
+        if isinstance(preauth, (list, tuple)):
+            codes = [getattr(p, "code_pre_authorization", "") for p in preauth if hasattr(p, "code_pre_authorization")]
+            code_concat = ", ".join(filter(None, codes)) or "(aucun code)"
+            return {
+                "code": code_concat,
+                "user_name": getattr(user, "username", "Utilisateur"),
+                "claim_code": "",
+                "status": self.get_status_label(key),
+            }
+
+        # Single object logic
+        return {
+            "code": getattr(preauth, "code_pre_authorization", ""),
+            "user_name": getattr(user, "username", "Utilisateur"),
+            "claim_code": getattr(preauth, "code", ""),
+            "status": self.get_status_label(key),
         }
-        return context
+
 
     def get_status_label(self, key):
         """Retourne le libellé du statut selon la clé"""
