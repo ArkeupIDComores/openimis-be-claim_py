@@ -13,7 +13,7 @@ class ClaimNotificationClient:
     def get_eligible_users(self, preauth, key):
         """Récupère les utilisateurs éligibles pour recevoir la notification"""
         if key in [ClaimNotificationKeys.ON_SUBMITTED, ClaimNotificationKeys.ON_APPROVED, ClaimNotificationKeys.ON_REJECTED]:
-            if preauth.admin and preauth.admin.email:
+            if preauth.admin and preauth.admin.email_id:
                 return [preauth.admin]
         
         if key in [ClaimNotificationKeys.ON_ADMIN_FOSA_VALIDATION, ClaimNotificationKeys.ON_PENDING]:
@@ -38,7 +38,7 @@ class ClaimNotificationClient:
     def get_context(self, preauth, key, user):
         """Prépare le contexte pour le template d'email"""
         context = {
-            "code": preauth.code,
+            "code": preauth.code_pre_authorization,
             "user_name": user.username if hasattr(user, 'username') else "Utilisateur",
             "claim_code": preauth.code,
             "status": self.get_status_label(key)
