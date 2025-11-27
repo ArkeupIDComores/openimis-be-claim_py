@@ -8,7 +8,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('location', '0022_alter_location_code'),
         ('claim', '0042_date_field_fix'),
     ]
 
