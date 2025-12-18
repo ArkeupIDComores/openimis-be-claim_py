@@ -734,7 +734,7 @@ class SubmitClaimsPreAuthorizationMutation(OpenIMISMutation, ClaimSubmissionStat
     @classmethod
     @mutation_on_uuids_from_filter(Claim, ClaimGQLType, 'additional_filters', __filter_handlers)
     def async_mutate(cls, user, **data):
-        if not user.has_perms(ClaimConfig.gql_mutation_submit_claims_perms):
+        if not user.has_perms(ClaimConfig.gql_submit_preauth_perms):
             raise PermissionDenied(_("unauthorized"))
         errors = []
         uuids = data.get("uuids", [])
